@@ -32,17 +32,18 @@
 	}
 }
 
+/* The claim buttons stay beside the item at every width; the title wraps. */
 .itemMain {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	gap: 0.75em 1em;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: start;
+	gap: 0.75em;
 }
 
 .itemBody {
 	display: grid;
-	flex: 1 1 15em;
 	gap: 0.5em;
+	overflow-wrap: anywhere;
 }
 
 /* Claim sits beside the item, with the other claim buttons stacked under it. */
