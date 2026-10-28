@@ -1,0 +1,14 @@
+# Package Managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+
+# Miscellaneous
+/static/
+worker-configuration.d.ts
+.wrangler
+
+# CSS formatting is owned by stylelint (see config/stylelint.config.cjs)
+*.css

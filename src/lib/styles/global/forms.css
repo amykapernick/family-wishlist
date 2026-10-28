@@ -1,0 +1,75 @@
+label,
+legend {
+	display: block;
+	margin: 1em 0 0.2em;
+	color: var(--neutral);
+	font-size: 0.75em;
+	font-weight: 700;
+}
+
+legend {
+	margin-bottom: 1em;
+	padding: 0;
+
+	@include subtitle;
+}
+
+input {
+	accent-color: var(--purple_bright);
+}
+
+input:not([type='radio'], [type='checkbox']),
+select,
+textarea {
+	display: block;
+	width: 100%;
+	min-height: 2.75rem;
+	margin: 0.1em 0 1em;
+	padding: 0.5em 1em;
+	border: 1px solid var(--input_border);
+	border-radius: 0.5em;
+	background: var(--input_bg);
+	box-shadow: none;
+	color: var(--text_primary);
+	font: inherit;
+	line-height: 1.5;
+
+	&:focus {
+		border-color: var(--purple_bright);
+	}
+
+	&[aria-invalid='true'] {
+		border-width: 2px;
+		border-color: var(--error);
+	}
+}
+
+textarea {
+	min-height: 5em;
+	resize: vertical;
+}
+
+/* Checkboxes and radios sit inside their label: <label><input> Text</label> */
+label:has(> input[type='checkbox'], > input[type='radio']) {
+	display: flex;
+	align-items: center;
+	min-height: 2.75rem;
+	margin: 0;
+	color: var(--text_primary);
+	font-size: 1em;
+	font-weight: 500;
+	gap: 1ch;
+	cursor: pointer;
+
+	& input {
+		width: 1.2em;
+		height: 1.2em;
+		margin: 0;
+	}
+}
+
+fieldset {
+	margin: 0;
+	padding: 0;
+	border: none;
+}

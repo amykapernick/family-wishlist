@@ -1,0 +1,63 @@
+{
+	"name": "family-wishlist",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"dev:live": "LIVE_DB=1 vite dev",
+		"build": "wrangler types && vite build",
+		"preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173",
+		"prepare": "(wrangler types && svelte-kit sync) || echo ''",
+		"check": "wrangler types && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"gen": "wrangler types",
+		"test:unit": "vitest",
+		"test": "npm run test:unit -- --run",
+		"lint": "prettier --check . && npm run lint:styles",
+		"format": "prettier --write . && stylelint --config ./config/stylelint.config.cjs --fix \"src/**/*.{css,svelte}\"",
+		"db:migrate:local": "wrangler d1 migrations apply DB --local",
+		"db:seed:local": "wrangler d1 execute DB --local --file seed/demo.sql",
+		"db:reset:local": "npm run db:migrate:local && npm run db:seed:local",
+		"db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+		"db:pull": "node scripts/db-sync.ts pull",
+		"db:push": "node scripts/db-sync.ts push",
+		"db:restore": "node scripts/db-sync.ts restore",
+		"deploy": "npm run build && wrangler deploy --env=\"\"",
+		"hash-pin": "node scripts/hash-pin.ts",
+		"new-secret": "node scripts/new-secret.ts",
+		"lint:styles": "stylelint --config ./config/stylelint.config.cjs \"src/**/*.{css,svelte}\""
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-cloudflare": "^8.0.0",
+		"@sveltejs/kit": "^3.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/node": "24.19.1",
+		"postcss": "8.5.15",
+		"postcss-advanced-variables": "5.0.0",
+		"postcss-hexrgba": "2.1.0",
+		"postcss-html": "1.8.1",
+		"postcss-mixins": "12.1.2",
+		"postcss-nesting": "14.0.0",
+		"prettier": "^3.8.3",
+		"prettier-plugin-svelte": "^4.1.0",
+		"stylelint": "16.26.1",
+		"stylelint-config-property-sort-order-smacss": "10.0.0",
+		"stylelint-config-standard": "36.0.1",
+		"stylelint-order": "6.0.4",
+		"stylelint-use-nesting": "5.1.2",
+		"svelte": "^5.57.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"vite": "^8.3.0",
+		"vitest": "^4.1.8",
+		"wrangler": "^4.97.0"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
+	},
+	"engines": {
+		"node": ">=22.18"
+	}
+}

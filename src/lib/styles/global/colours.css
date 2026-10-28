@@ -1,0 +1,46 @@
+/*
+ * Semantic colours, following house's colours.css names. house switches
+ * these with separate [data-theme] blocks; here each is one light-dark()
+ * pair, so the same tokens also follow the system theme without JavaScript.
+ *
+ * Text tokens are explicit values rather than color-mix() so their
+ * contrast is fixed and checkable. Dark surfaces are a little darker than
+ * house's so secondary text keeps 7:1.
+ */
+
+:root {
+	--transparent: transparent;
+	--page_bg: light-dark(var(--background), var(--dark_background));
+	--surface_bg: light-dark(var(--white_true), #26292e);
+	--text_primary: light-dark(var(--black), #e8e6e4);
+	--text_secondary: light-dark(var(--grey), var(--grey_light));
+	--border: light-dark(#c9bfb7, #4a4d52);
+	--card_top: light-dark(var(--white_true), #26292e);
+	--card_bottom: light-dark(#fbf7f4, #202228);
+	--input_bg: light-dark(#faf6f3, #2b2e33);
+	--input_border: light-dark(#8a817b, #8d8a87);
+	--header_background: light-dark(#efe7e1, #202228);
+	--nav_hover_bg: light-dark(#e4d9d0, #303237);
+	--table_header_bg: light-dark(var(--blue_navy), #414961);
+	--table_header_text: light-dark(var(--white), #e8e6e4);
+	--table_stripe: light-dark(#fbf7f4, #1b1e24);
+	--error: var(--red);
+	--error_bg: light-dark(#f7e9e8, #3a2326);
+	--success_bg: light-dark(#e8f3e8, #1f2f24);
+	--warning_bg: light-dark(#f7ebe1, #3a2c1c);
+	--purple_bright_bg: light-dark(#f2e9f2, #332f3c);
+	--shadow_soft: 0 0.1em 0.5em rgb(0 0 0 / 25%);
+	--shadow_card: rgb(13 13 13 / 4%) 0 1px 2px, rgb(95 65 50 / 7%) 0 3px 10px;
+	--shadow_popover: rgb(13 13 13 / 4%) 0 1px 2px, rgb(95 65 50 / 9%) 0 8px 20px;
+	--gradient_navy: linear-gradient(155deg, rgb(53 71 140), rgb(26 36 71));
+
+	color-scheme: light dark;
+
+	&[data-theme='light'] {
+		color-scheme: light;
+	}
+
+	&[data-theme='dark'] {
+		color-scheme: dark;
+	}
+}

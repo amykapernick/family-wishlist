@@ -1,0 +1,22 @@
+/*
+ * house's pills are solid colour with matching text. For AAA, the colour
+ * moves to a tint and border, and the text stays at full contrast.
+ */
+
+.root {
+	display: inline-flex;
+	width: auto;
+	max-width: max-content;
+	padding: 0.25em 0.8em;
+	border: 1px solid var(--pill_background);
+	border-radius: 2em;
+	background: color-mix(in oklch, var(--pill_background) 14%, var(--surface_bg));
+	color: var(--text_primary);
+	font-size: 0.85em;
+	font-weight: 700;
+
+	&.outline {
+		background: none;
+		font-weight: 600;
+	}
+}

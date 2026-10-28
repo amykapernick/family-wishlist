@@ -1,0 +1,46 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "family-wishlist",
+	"compatibility_date": "2026-10-19",
+	"compatibility_flags": ["nodejs_als"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"workers_dev": true,
+	// Cloudflare creates the DNS record and certificate on deploy. The
+	// kaperscrewe.au zone must be in the same Cloudflare account.
+	"routes": [{ "pattern": "gifts.kaperscrewe.au", "custom_domain": true }],
+	"preview_urls": false,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "family-wishlist",
+			// From `npx wrangler d1 create family-wishlist`. `npm run dev` uses a
+			// local copy (.wrangler/state); only `npm run dev:live` uses this one.
+			"database_id": "8829902f-7cd8-4a77-ba9e-ca33d09da6d7",
+			"migrations_dir": "migrations"
+		}
+	],
+	"env": {
+		// Only for `npm run dev:live`: local dev against the live database.
+		// Never deploy this environment.
+		"live": {
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "family-wishlist",
+					"database_id": "8829902f-7cd8-4a77-ba9e-ca33d09da6d7",
+					"migrations_dir": "migrations",
+					"remote": true
+				}
+			],
+			"vars": { "LIVE_DB": "1" }
+		}
+	}
+	// Secrets (set with `npx wrangler secret put <NAME>`, or .dev.vars locally):
+	//   FAMILY_TOKEN     long random string used in /join/<FAMILY_TOKEN>
+	//   FAMILY_PIN_HASH  output of `npm run hash-pin -- <pin>`
+	//   COOKIE_SECRET    long random string used to sign cookies
+}

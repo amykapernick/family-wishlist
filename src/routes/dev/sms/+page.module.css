@@ -1,0 +1,377 @@
+.page {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 2em;
+
+	& h2 {
+		margin-top: 0;
+	}
+}
+
+.banner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	margin: 0;
+	padding: 0.75em 1em;
+	border-radius: 0.5em;
+	background: var(--warning_bg);
+	gap: 0.5em 1em;
+}
+
+.stepNumber {
+	display: grid;
+	width: 1.8em;
+	height: 1.8em;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--purple_bright);
+	color: var(--purple_bright_text);
+	font-family: $font_heading;
+	font-weight: 700;
+}
+
+.tableWrap {
+	overflow-x: auto;
+
+	& table {
+		margin-top: 0;
+	}
+
+	& code {
+		white-space: nowrap;
+	}
+}
+
+.scenarios {
+	display: grid;
+	gap: 1.5em;
+}
+
+.scenario {
+	display: grid;
+	gap: 0.5em;
+}
+
+.scenarioTitle {
+	margin: 0;
+}
+
+.description {
+	margin: 0 0 0.5em;
+	color: var(--text_secondary);
+}
+
+.phones {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5em;
+}
+
+/* A simple phone frame around each conversation. */
+.phone {
+	flex: 1 1 18em;
+	max-width: 24em;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	border: 0.5em solid var(--text_primary);
+	border-radius: 1.5em;
+	background: var(--page_bg);
+	box-shadow: var(--shadow_popover);
+}
+
+.phoneHead {
+	display: grid;
+	padding: 0.6em 1em;
+	border-bottom: 1px solid var(--border);
+	background: var(--header_background);
+	text-align: center;
+
+	& span {
+		color: var(--text_secondary);
+		font-size: 0.85em;
+	}
+}
+
+.thread {
+	display: grid;
+	margin: 0;
+	padding: 1em 0.75em;
+	list-style: none;
+	gap: 0.75em;
+}
+
+.message {
+	display: grid;
+	gap: 0.2em;
+}
+
+.bubble {
+	max-width: 85%;
+	padding: 0.5em 0.8em;
+	border-radius: 1em;
+	white-space: pre-line;
+	overflow-wrap: anywhere;
+}
+
+.out {
+	justify-items: end;
+
+	& .bubble {
+		border-bottom-right-radius: 0.2em;
+		background: var(--purple_bright);
+		color: var(--purple_bright_text);
+	}
+}
+
+.in {
+	justify-items: start;
+
+	& .bubble {
+		border: 1px solid var(--border);
+		border-bottom-left-radius: 0.2em;
+		background: var(--surface_bg);
+		color: var(--text_primary);
+	}
+}
+
+.meta {
+	color: var(--text_secondary);
+	font-size: 0.8em;
+}
+
+/* ------------------------------------------------------------ sandbox */
+.sandbox {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	align-items: start;
+	gap: 2em;
+
+	@media (width >= 60em) {
+		grid-template-columns: minmax(0, 24em) minmax(0, 1fr);
+	}
+}
+
+.deviceColumn {
+	display: grid;
+	gap: 1em;
+}
+
+/* The sample phone: a frame with the thread scrolling between header and composer. */
+.device {
+	display: grid;
+	grid-auto-rows: auto;
+	grid-template-rows: auto minmax(0, 1fr);
+	width: 100%;
+	max-width: 24em;
+	height: 40em;
+	max-height: 85vh;
+	overflow: hidden;
+	border: 0.6em solid var(--text_primary);
+	border-radius: 2em;
+	background: var(--page_bg);
+	box-shadow: var(--shadow_popover);
+
+	& > .error,
+	& > .check,
+	& > .devicePad {
+		margin: 0;
+		padding: 0 0.9em 0.6em;
+	}
+}
+
+.deviceTop {
+	display: grid;
+	padding: 0.6em 0.9em;
+	border-bottom: 1px solid var(--border);
+	background: var(--header_background);
+	gap: 0.2em;
+
+	& label {
+		font-size: 0.85em;
+		font-weight: 700;
+	}
+
+	& select {
+		margin: 0;
+	}
+}
+
+.deviceThread {
+	align-content: start;
+	overflow-y: auto;
+}
+
+.emptyThread {
+	color: var(--text_secondary);
+	text-align: center;
+}
+
+.composer {
+	display: flex;
+	align-items: center;
+	padding: 0.6em 0.9em;
+	border-top: 1px solid var(--border);
+	gap: 0.5em;
+
+	& input,
+	& textarea {
+		flex: 1;
+		min-width: 0;
+		margin: 0;
+		border-radius: 1.5em;
+	}
+
+	& textarea {
+		border-radius: 1em;
+		resize: vertical;
+	}
+
+	& button {
+		border-radius: 1.5em;
+	}
+}
+
+.check {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.hint {
+	margin: 0;
+	color: var(--text_secondary);
+	font-size: 0.9em;
+}
+
+.error {
+	margin: 0;
+	color: var(--error);
+	font-weight: 600;
+}
+
+.stepsButton {
+	min-height: 2.75rem;
+	font-size: 0.85em;
+}
+
+.suggestions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em;
+
+	& ul {
+		display: flex;
+		flex-wrap: wrap;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		gap: 0.5em;
+	}
+}
+
+/* The step-through of handleSms() for the selected text. */
+.trace {
+	display: grid;
+	padding: 1em;
+	border: 1px solid var(--border);
+	border-radius: 0.5em;
+	background: var(--surface_bg);
+	gap: 0.75em;
+}
+
+.traceTitle,
+.subTitle {
+	margin: 0;
+}
+
+.traceFor {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	margin: 0;
+	gap: 0.25em 0.5em;
+}
+
+.steps {
+	display: grid;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	gap: 0.5em;
+}
+
+.step {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: start;
+	padding: 0.6em 0.75em;
+	border-left: 0.3em solid var(--border);
+	border-radius: 0.3em;
+	background: var(--page_bg);
+	gap: 0.75em;
+
+	&[data-kind='write'] {
+		border-left-color: var(--green);
+	}
+
+	&[data-kind='stop'] {
+		border-left-color: var(--purple_bright);
+	}
+}
+
+.stepBody {
+	display: grid;
+	gap: 0.2em;
+
+	& span {
+		color: var(--text_secondary);
+		overflow-wrap: anywhere;
+	}
+}
+
+.stepCode {
+	justify-self: start;
+	max-width: 100%;
+	font-size: 0.85em;
+	overflow-wrap: anywhere;
+}
+
+.code {
+	margin: 0;
+	padding: 0.75em;
+	overflow-x: auto;
+	border-radius: 0.3em;
+	background: var(--page_bg);
+	font-size: 0.85em;
+}
+
+.log {
+	display: grid;
+	margin: 0;
+	padding-left: 1.2em;
+	gap: 0.5em;
+
+	& li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.25em 0.75em;
+	}
+}
+
+.examples {
+	& summary {
+		display: flex;
+		align-items: center;
+		min-height: 2.75rem;
+		cursor: pointer;
+	}
+}
+
+.examplesTitle {
+	display: inline;
+	margin: 0;
+}

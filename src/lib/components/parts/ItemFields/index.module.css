@@ -1,0 +1,22 @@
+.hint {
+	color: var(--text_secondary);
+	font-weight: 500;
+}
+
+.error {
+	margin: -0.5em 0 1em;
+	color: var(--error);
+	font-weight: 600;
+}
+
+.check {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.checkHint {
+	margin: -0.25em 0 1em;
+	color: var(--text_secondary);
+	font-size: 0.9em;
+}

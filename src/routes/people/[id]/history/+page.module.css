@@ -1,0 +1,19 @@
+.range {
+	color: var(--text_secondary);
+}
+
+.tableWrap {
+	overflow-x: auto;
+}
+
+.date {
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.evergreen {
+	margin-left: 0.5em;
+	color: var(--text_secondary);
+	font-size: 0.85em;
+	white-space: nowrap;
+}

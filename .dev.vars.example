@@ -1,0 +1,14 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+# Demo values: family link is /join/local-dev-family-token, family PIN is 1234.
+FAMILY_TOKEN=local-dev-family-token
+FAMILY_PIN_HASH=pbkdf2$100000$cLbiEWRqeWB1iDMYDb3fLA$31Ib4WhQbYH6sTRxNwRQCQzn-TU1HuGjkYvFT1o0WLA
+COOKIE_SECRET=local-dev-cookie-secret-change-me-in-production
+
+# Text messages (optional). Leave these out and /api/sms returns 503; the
+# /dev/sms sandbox works without them.
+# TWILIO_ACCOUNT_SID=AC...
+# TWILIO_AUTH_TOKEN=...
+# TWILIO_FROM_NUMBER=+61...
+# Only when testing the real webhook through a tunnel (ngrok, cloudflared):
+# the public URL configured in Twilio, so signatures check out.
+# TWILIO_WEBHOOK_URL=https://your-tunnel.example/api/sms

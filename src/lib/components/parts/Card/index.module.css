@@ -1,0 +1,23 @@
+.card {
+	position: relative;
+	width: auto;
+	padding: 0.7em;
+	border: 1px solid var(--border);
+	border-radius: 0.5em;
+	background: linear-gradient(var(--card_top), var(--card_bottom));
+	box-shadow: var(--shadow_card);
+
+	&[data-theme='dark'] {
+		border: none;
+		background: var(--gradient_navy);
+		color: var(--white);
+	}
+
+	&[data-theme='white'] {
+		background: var(--surface_bg);
+	}
+
+	@media (width >= 50em) {
+		padding: 1em;
+	}
+}

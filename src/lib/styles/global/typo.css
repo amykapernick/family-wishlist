@@ -1,0 +1,132 @@
+body {
+	margin: 0;
+	background: var(--page_bg);
+	color: var(--text_primary);
+	font-family: $font_main;
+	font-size: 1em;
+	line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+	font-family: $font_heading;
+	line-height: 1.2;
+	text-wrap: balance;
+
+	& a {
+		color: inherit;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+h1 {
+	margin: 0 0 0.5em;
+	color: var(--navy);
+	font-size: 2em;
+	font-weight: 700;
+}
+
+h2 {
+	font-size: 1.3em;
+	font-weight: 700;
+}
+
+h3 {
+	font-size: 1.2em;
+	font-weight: 600;
+}
+
+nav {
+	& ul,
+	& li {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	& a {
+		display: block;
+		color: inherit;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+/*
+ * house's button mixins, plus a minimum height so every control meets the
+ * spec's large tap target requirement.
+ */
+
+button,
+.btn {
+
+	@include button;
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2.75rem;
+	gap: 0.4em;
+	font-size: 1em;
+	text-decoration: none;
+
+	&.secondary {
+
+		@include button_secondary;
+	}
+
+	&.danger {
+
+		@include button_secondary(red);
+	}
+
+	&.text {
+
+		@include button_text;
+
+		min-height: auto;
+	}
+}
+
+/* Links are always underlined so they never rely on colour alone. */
+a {
+	color: var(--purple_bright);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+
+	&:hover {
+		text-decoration-thickness: 2px;
+	}
+}
+
+blockquote {
+	margin: 0;
+	padding: 0.5em 1em;
+	border-left: 3px solid var(--purple_bright);
+	background: var(--purple_bright_bg);
+	white-space: pre-wrap;
+}
+
+code {
+	font-family: $font_code;
+}
+
+svg {
+	width: 1em;
+	height: 1em;
+}
+
+.subtitle {
+
+	@include subtitle;
+}

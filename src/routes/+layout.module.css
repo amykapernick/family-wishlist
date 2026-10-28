@@ -1,0 +1,57 @@
+.skip {
+	position: absolute;
+	z-index: 100;
+	top: -4em;
+	left: 0.5em;
+	padding: 0.5em 1em;
+	border-radius: 0.5em;
+	background: var(--surface_bg);
+
+	&:focus {
+		top: 0.5em;
+	}
+}
+
+.main {
+	width: 100%;
+	min-width: 0;
+	max-width: 1200px;
+	padding: 1em 5vw 2em;
+
+	&:focus {
+		outline: none;
+	}
+}
+
+/* Room for the fixed bottom nav on small screens. */
+.signedIn .main {
+	padding-bottom: 6em;
+}
+
+.liveDb {
+	margin: 0;
+	padding: 0.6em 5vw;
+	border-bottom: 0.25em solid var(--error);
+	background: var(--warning_bg);
+	text-align: center;
+}
+
+.acting {
+	margin: 0 0 1em;
+	padding: 0.6em 1em;
+	border-radius: 0.5em;
+	background: var(--warning_bg);
+}
+
+@media (width >= 50em) {
+	.signedIn {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: start;
+	}
+
+	.main,
+	.signedIn .main {
+		padding: 2em 5% 4em;
+	}
+}

@@ -1,0 +1,14 @@
+.toast {
+	width: max-content;
+	max-width: 100%;
+	margin: 0;
+	padding: 0.7em 1em;
+	border-radius: 0.5em;
+	background: var(--success_bg);
+	box-shadow: var(--shadow_popover);
+	color: var(--text_primary);
+
+	&:empty {
+		display: none;
+	}
+}

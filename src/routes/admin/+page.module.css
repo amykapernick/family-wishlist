@@ -1,0 +1,196 @@
+.page {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	max-width: 50em;
+	gap: 1.5em;
+}
+
+.sectionTitle {
+	margin-top: 0;
+}
+
+.error {
+	color: var(--error);
+	font-weight: 600;
+}
+
+.hint {
+	color: var(--text_secondary);
+	font-size: 0.9em;
+	font-weight: 500;
+}
+
+.people {
+	margin: 0 0 1em;
+	padding: 0;
+	list-style: none;
+
+	& > li {
+		border-bottom: 1px solid var(--border);
+	}
+}
+
+.details {
+	& summary {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		min-height: 2.75rem;
+		padding: 0.25em 0;
+		color: var(--purple_bright);
+		font-weight: 600;
+		cursor: pointer;
+		gap: 0.5em;
+	}
+
+	& form {
+		padding-bottom: 0.5em;
+	}
+}
+
+.personName {
+	color: var(--text_primary);
+	font-family: $font_heading;
+	font-size: 1.2em;
+	font-weight: 700;
+}
+
+.tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3em;
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.confirm {
+	padding: 1em;
+	border-radius: 0.5em;
+	background: var(--error_bg);
+}
+
+.checklist {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
+	margin: 0 0 1em;
+	padding: 0;
+	list-style: none;
+	gap: 0 1em;
+}
+
+/* A recommenders row: name, chips, then the dashed "Add person" pill. */
+.recommenderRow {
+	display: flex;
+	position: relative;
+	flex-wrap: wrap;
+	align-items: center;
+	padding: 0.25em 0;
+	gap: 0.3em 0.75em;
+}
+
+/*
+ * Drawn the same size as the recommender pills beside it, while the summary
+ * around it stays a full 44px tall so it's still easy to tap.
+ */
+
+.addPill {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.75rem;
+	list-style: none;
+	cursor: pointer;
+
+	&::-webkit-details-marker {
+		display: none;
+	}
+
+	& > span:first-child {
+		display: inline-flex;
+		padding: 0.25em 0.8em;
+		border: 1px dashed var(--purple_bright);
+		border-radius: 2em;
+		color: var(--purple_bright);
+		font-size: 0.85em;
+		font-weight: 700;
+		gap: 0.3em;
+	}
+
+	&:focus-visible {
+		outline: none;
+
+		& > span:first-child {
+			outline: 3px solid var(--purple_bright);
+		}
+	}
+
+	&:hover > span:first-child,
+	.picker[open] > & > span:first-child {
+		border-style: solid;
+		background: color-mix(in oklch, var(--purple_bright) 10%, var(--surface_bg));
+	}
+}
+
+/* The multi-select opens as a panel over the rows below, as wide as the row. */
+.pickerPanel {
+	position: absolute;
+	z-index: 2;
+	top: calc(100% - 0.25em);
+	right: 0;
+	left: 0;
+	max-height: min(28em, 70vh);
+	padding: 0.75em 1em;
+	overflow-y: auto;
+	border: 1px solid var(--input_border);
+	border-radius: 0.5em;
+	background: var(--surface_bg);
+	box-shadow: rgb(13 13 13 / 12%) 0 4px 16px;
+
+	& fieldset {
+		margin: 0;
+		padding: 0;
+		border: none;
+	}
+
+	& legend {
+		margin-bottom: 0.4em;
+		font-weight: 700;
+	}
+
+	& label {
+		display: flex;
+		align-items: center;
+		min-height: 2.75rem;
+		gap: 0.5em;
+	}
+}
+
+/* "Remove …" opens a confirmation; red so it doesn't read as a normal action. */
+.details summary.danger {
+	color: var(--error);
+}
+
+/* A worked example for a bulk-add box, laid out like what you'd type. */
+.example {
+	margin-bottom: 0.6em;
+	color: var(--text_secondary);
+	font-size: 0.9em;
+
+	& p {
+		margin: 0.2em 0;
+	}
+
+	& pre {
+		margin: 0;
+		padding: 0.5em 0.75em;
+		overflow-x: auto;
+		border: 1px dashed var(--input_border);
+		border-radius: 0.4em;
+		color: var(--text_primary);
+		white-space: pre;
+	}
+}

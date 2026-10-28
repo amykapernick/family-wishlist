@@ -1,0 +1,30 @@
+.modal {
+	width: min(40em, 100% - 2em);
+	max-height: calc(100dvh - 2em);
+	padding: 1em;
+	border: 1px solid var(--border);
+	border-radius: 0.5em;
+	background: var(--surface_bg);
+	box-shadow: var(--shadow_popover);
+	color: var(--text_primary);
+
+	&::backdrop {
+		background: rgb(0 0 0 / 50%);
+	}
+
+	@media (width >= 50em) {
+		padding: 1.5em;
+	}
+}
+
+.head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	margin-bottom: 0.5em;
+	gap: 0.5em 1em;
+}
+
+.title {
+	margin: 0 auto 0 0;
+}

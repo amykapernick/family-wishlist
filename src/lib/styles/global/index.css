@@ -1,0 +1,29 @@
+@import './palette.css';
+
+@import './colours.css';
+
+@import './fonts.css';
+
+@import './typo.css';
+
+@import './forms.css';
+
+@import './table.css';
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	outline-offset: 0.2em;
+	text-decoration-skip-ink: auto;
+}
+
+/* house uses a dotted green focus ring; solid and thicker here for AA contrast. */
+*:focus-visible {
+	outline: 3px solid var(--purple_bright);
+}
+
+.sr-only {
+
+	@include sr_only;
+}

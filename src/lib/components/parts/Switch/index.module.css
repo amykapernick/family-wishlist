@@ -1,0 +1,129 @@
+@import '@mixins';
+
+.container {
+	--gap: 0.1em;
+	--toggle: 0.8em;
+
+	display: flex;
+	position: relative;
+	align-items: center;
+	align-self: center;
+	width: auto;
+	max-width: max-content;
+	height: 1em;
+	font-size: 1.5em;
+
+	& .switch::before,
+	& .label svg {
+		transition: all 0.2s ease-in-out;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		& .switch::before, & .label svg {
+			transition: none;
+		}
+	}
+
+	&:has(input[value='0']:checked) {
+		& .switch::before {
+			left: calc(1.5 * var(--gap));
+		}
+
+		& .label svg {
+			left: calc(50% - var(--toggle) + (var(--gap) * 3.5));
+		}
+	}
+
+	&:has(input[value='1']:checked) {
+		& .switch {
+			background: var(--purple_bright);
+
+			&::before {
+				left: calc(100% - var(--toggle) - (1.5 * var(--gap)));
+			}
+		}
+
+		& .label svg {
+			left: calc(50% + var(--toggle) - (var(--gap) * 3.5));
+		}
+	}
+
+	& input:checked + .label svg {
+		display: block;
+	}
+
+	/* Only the option you'd switch *to* covers the toggle, so a click anywhere flips it. */
+	& input:not(:checked) + .label::before {
+		content: '';
+	}
+
+	&:has(input:focus-visible) .switch {
+		outline: 3px solid var(--purple_bright);
+		outline-offset: 0.2em;
+	}
+
+	& input[value='1'] + .label {
+		order: 2;
+	}
+}
+
+.text {
+
+	@include sr_only;
+}
+
+.radio {
+
+	@include sr_only;
+}
+
+.label {
+	display: flex;
+	z-index: 10;
+	align-items: center;
+	margin: 0;
+	font-size: 1em;
+	line-height: 1;
+
+	& svg {
+		display: none;
+		position: absolute;
+		z-index: 2;
+		top: var(--gap);
+		width: auto;
+		height: var(--toggle);
+		padding: var(--gap);
+		transform: translateX(-50%);
+		color: var(--black);
+		pointer-events: none;
+	}
+
+	&::before {
+		position: absolute;
+		z-index: 10;
+		cursor: pointer;
+		inset: 0;
+	}
+}
+
+.switch {
+	display: block;
+	position: relative;
+	z-index: 5;
+	flex-shrink: 0;
+	width: 2em;
+	height: 1em;
+	border-radius: 1em;
+	background: var(--border);
+
+	&::before {
+		content: '';
+		display: block;
+		position: absolute;
+		top: var(--gap);
+		width: var(--toggle);
+		height: var(--toggle);
+		border-radius: 50%;
+		background: var(--white_true);
+	}
+}

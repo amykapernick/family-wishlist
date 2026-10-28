@@ -1,0 +1,36 @@
+table {
+	position: relative;
+	width: 100%;
+	max-width: 1000px;
+	margin: 20px 0;
+	overflow: hidden;
+	border-collapse: collapse;
+	border-radius: 0.8em;
+
+	&::before {
+		content: '';
+		position: absolute;
+		border: 1px solid var(--border);
+		border-radius: 0.8em;
+		pointer-events: none;
+		inset: 0;
+	}
+}
+
+thead {
+	background: var(--table_header_bg);
+	color: var(--table_header_text);
+	text-align: left;
+}
+
+tbody {
+	& tr:nth-child(2n) {
+		background: var(--table_stripe);
+	}
+}
+
+td,
+th {
+	padding: 0.5em 0.8em;
+	vertical-align: top;
+}

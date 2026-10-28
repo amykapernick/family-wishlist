@@ -1,0 +1,15 @@
+@mixin container_spacing {
+	padding: 20px;
+
+	@media (width >= 45em) {
+		padding: 40px;
+	}
+
+	@media (width >= 60em) {
+		padding: 40px 5vw;
+	}
+
+	@media (width >= 80em) {
+		padding: 40px calc(50vw - 35rem);
+	}
+}

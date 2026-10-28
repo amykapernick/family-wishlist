@@ -1,0 +1,48 @@
+/*
+ * Base palette, matching the house project. There, these come from the
+ * PocketBase "colours" collection at build time (colours.generated.css);
+ * here they're plain values so the app has no build-time dependency.
+ *
+ * Values marked (placeholder) weren't available outside the house API, so
+ * they're close stand-ins. Swap in the real hex values to match exactly.
+ *
+ * This app targets WCAG 2.2 AAA, so every colour used for text is a variant
+ * that reaches 7:1 against every background it sits on (checked with axe's
+ * color-contrast-enhanced rule in both themes). Where that meant departing
+ * from a house value, the house value is noted alongside.
+ *
+ * light-dark() follows color-scheme, which colours.css sets from the
+ * data-theme attribute, or the system preference when there isn't one.
+ */
+
+:root {
+	--background: #f7f0eb;
+	--dark_background: #14171d;
+	--black: #0d0d0d;
+	--black_true: #000000;
+	--white: #fbf9f7; /* (placeholder) */
+	--white_true: #ffffff;
+	--grey: #45403d; /* (placeholder) darkened for 7:1 */
+	--grey_light: #d3cec9; /* (placeholder) lightened for 7:1 */
+	--blue_navy: #30437f; /* house #364c93, darkened for 7:1 */
+	--dark_navy: #a9bdff; /* house #7294fa, lightened for 7:1 */
+	--light_purple_bright: #6c3174; /* house #9440a0, darkened for 7:1 */
+	--dark_purple_bright: #e3b9ea; /* (placeholder) */
+	--green_base: #64ad66;
+	--orange_base: #bb5c04;
+	--yellow: #ffce03;
+	--light_red: #8a201a; /* (placeholder) */
+	--dark_red: #fe9b92; /* (placeholder) */
+	--navy: light-dark(var(--blue_navy), var(--dark_navy));
+	--navy_text: light-dark(var(--white), var(--black));
+	--purple_bright: light-dark(var(--light_purple_bright), var(--dark_purple_bright));
+	--purple_bright_text: light-dark(var(--white_true), var(--black));
+	--green: var(--green_base);
+	--green_text: var(--black);
+	--orange: var(--orange_base);
+	--orange_text: var(--black);
+	--red: light-dark(var(--light_red), var(--dark_red));
+	--red_text: light-dark(var(--white_true), var(--black));
+	--neutral: light-dark(var(--black), var(--white));
+	--neutral_text: light-dark(var(--white), var(--black));
+}

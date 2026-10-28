@@ -1,0 +1,43 @@
+.page {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	max-width: 40em;
+	gap: 1.5em;
+}
+
+.sectionTitle {
+	margin-top: 0;
+}
+
+.error {
+	color: var(--error);
+	font-weight: 600;
+}
+
+.notice {
+	padding: 0.6em 1em;
+	border-radius: 0.5em;
+	background: var(--warning_bg);
+}
+
+.details {
+	margin-top: 1em;
+
+	& summary {
+		display: flex;
+		align-items: center;
+		min-height: 2.75rem;
+		color: var(--purple_bright);
+		font-weight: 600;
+		cursor: pointer;
+	}
+}
+
+.checklist {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
+	margin: 0 0 1em;
+	padding: 0;
+	list-style: none;
+	gap: 0 1em;
+}

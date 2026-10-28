@@ -1,0 +1,47 @@
+.card {
+	display: grid;
+	justify-items: center;
+	height: 100%;
+	padding: 1em;
+	border: 1px solid var(--border);
+	border-radius: 0.5em;
+	background: linear-gradient(var(--card_top), var(--card_bottom));
+	box-shadow: var(--shadow_card);
+	color: var(--text_primary);
+	text-align: center;
+	text-decoration: none;
+	gap: 0.25em;
+
+	&:hover {
+		border-color: var(--purple_bright);
+		box-shadow: var(--shadow_popover);
+	}
+
+	&.current {
+		border-color: var(--navy);
+	}
+}
+
+.avatar {
+	display: grid;
+	width: 3em;
+	height: 3em;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--purple_bright);
+	color: var(--purple_bright_text);
+	font-family: $font_heading;
+	font-size: 1.4em;
+	font-weight: 700;
+}
+
+.name {
+	font-family: $font_heading;
+	font-size: 1.3em;
+	font-weight: 700;
+}
+
+.detail {
+	color: var(--text_secondary);
+	font-size: 0.85em;
+}

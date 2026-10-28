@@ -1,0 +1,12 @@
+.field {
+	& input {
+		max-width: 12em;
+		letter-spacing: 0.3em;
+	}
+}
+
+.error {
+	margin: -0.5em 0 1em;
+	color: var(--error);
+	font-weight: 600;
+}
