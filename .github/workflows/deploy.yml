@@ -1,6 +1,7 @@
 # Deploys to Cloudflare on every push to prod, which includes merged PRs.
-# Needs repository secrets CLOUDFLARE_API_TOKEN (Workers and D1 edit access)
-# and CLOUDFLARE_ACCOUNT_ID.
+# Database migrations are applied by hand (npm run db:migrate:remote), before
+# pushing code that needs them. Needs repository secrets CLOUDFLARE_API_TOKEN
+# (Workers edit access) and CLOUDFLARE_ACCOUNT_ID.
 name: Deploy
 
 on:
@@ -38,10 +39,6 @@ jobs:
         run: |
           npm run check
           npm test
-
-      # Applies only migrations the live database hasn't had yet.
-      - name: Migrate the live database
-        run: npm run db:migrate:remote
 
       - name: Deploy
         run: npm run deploy

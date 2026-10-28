@@ -188,9 +188,9 @@ The app always keeps at least one admin with a PIN: the last one can't be demote
 
 ### Upgrading an existing deployment
 
-Pushing to `prod` deploys automatically (`.github/workflows/deploy.yml`): it checks and tests, applies any new migrations, then deploys. It needs the repository secrets `CLOUDFLARE_API_TOKEN` (Workers and **D1 Edit** access) and `CLOUDFLARE_ACCOUNT_ID`.
+Pushing to `prod` deploys automatically (`.github/workflows/deploy.yml`): it checks and tests, then deploys. It doesn't touch the database: whenever there are new files in `migrations/`, run `npm run db:migrate:remote` yourself before pushing the code that needs them. The workflow needs the repository secrets `CLOUDFLARE_API_TOKEN` (Workers edit access) and `CLOUDFLARE_ACCOUNT_ID`.
 
-To deploy by hand, run `npm run db:migrate:remote` before `npm run deploy` whenever there are new files in `migrations/`.
+To deploy by hand instead, run `npm run db:migrate:remote` (if there are new migrations), then `npm run deploy`.
 
 ## The family link
 
