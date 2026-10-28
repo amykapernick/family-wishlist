@@ -20,12 +20,17 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
+
+      # `wrangler types` reads secret names from .dev.vars, so give it the demo
+      # one. Deploys use the secrets stored in Cloudflare; .dev.vars is never
+      # uploaded.
+      - run: cp .dev.vars.example .dev.vars
 
       - run: npm ci
 
