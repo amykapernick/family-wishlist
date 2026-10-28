@@ -92,3 +92,13 @@ export interface SizeRow {
 	size: string;
 	updated_at: string;
 }
+
+/** Who "Ask for ideas" about someone will go to, for the confirmation dialog. */
+export interface AskTargets {
+	/** No recommenders, so the person themselves is asked. */
+	asksThemselves: boolean;
+	/** The asker already has an open request with the person themselves. */
+	waitingOnThem: boolean;
+	/** `waiting`: already asked and not answered yet, so they're skipped. */
+	targets: { id: string; name: string; waiting: boolean }[];
+}

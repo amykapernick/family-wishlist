@@ -11,8 +11,8 @@
  * color-contrast-enhanced rule in both themes). Where that meant departing
  * from a house value, the house value is noted alongside.
  *
- * light-dark() follows color-scheme, which colours.css sets from the
- * data-theme attribute, or the system preference when there isn't one.
+ * light-dark() follows color-scheme, which colours.css leaves to the
+ * device's light or dark setting.
  */
 
 :root {

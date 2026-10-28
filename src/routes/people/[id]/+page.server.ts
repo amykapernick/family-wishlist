@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
+import { askAbout, loadAskTargets, sendAsk } from '#lib/server/ask.ts';
 import {
 	addEvergreenClaim,
 	archiveItem,
@@ -45,11 +46,13 @@ export const load: PageServerLoad = async (event) => {
 	const owner = findPerson(identity, event.params.id);
 	const db = getEnv().DB;
 	const isOwner = identity.acting.id === owner.id;
-	const [rows, claims, sizes] = await Promise.all([
+	const [rows, claims, sizes, ask] = await Promise.all([
 		listItemsFor(db, owner.id),
 		// Never loaded for the owner, so it can't leak into their page data.
 		isOwner ? [] : listRecentClaims(db, owner.id),
-		listSizes(db, owner.id)
+		listSizes(db, owner.id),
+		// For the "Ask for ideas" dialog; requests about the owner are spoilers too.
+		isOwner ? null : loadAskTargets(db, identity, owner).then(({ requests: _, ...ask }) => ask)
 	]);
 	return {
 		owner,
@@ -59,6 +62,7 @@ export const load: PageServerLoad = async (event) => {
 		people: isOwner ? [] : identity.people.map(({ id, name }) => ({ id, name })),
 		actingId: identity.acting.id,
 		sizes,
+		ask,
 		canEditSizes: canEditSizes(identity.acting.id, owner.id)
 	};
 };
@@ -115,6 +119,12 @@ const count = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
 const isDuplicate = (err: unknown) => String(err).includes('UNIQUE');
 
 export const actions: Actions = {
+	ask: async (event) => {
+		const identity = requireIdentity(event.locals);
+		const owner = askAbout(identity, event.params.id);
+		return sendAsk(getEnv().DB, identity, owner, await event.request.formData());
+	},
+
 	addSize: async (event) => {
 		const owner = sizesGuard(event);
 		const form = await event.request.formData();

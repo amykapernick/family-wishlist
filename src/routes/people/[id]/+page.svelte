@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import AskIdeasModal from '#lib/components/parts/AskIdeasModal/index.svelte';
 	import Card from '#lib/components/parts/Card/index.svelte';
 	import EmptyState from '#lib/components/parts/EmptyState/index.svelte';
+	import ExternalLink from '#lib/components/parts/ExternalLink/index.svelte';
 	import ItemFields from '#lib/components/parts/ItemFields/index.svelte';
 	import Modal from '#lib/components/parts/Modal/index.svelte';
 	import PageTitle from '#lib/components/parts/PageTitle/index.svelte';
@@ -15,11 +17,6 @@
 
 	const isGiverView = (item: ItemView): item is GiverItemView => 'claimed_by_id' in item;
 	const nameOf = (id: string | null) => data.people.find((p) => p.id === id)?.name ?? 'Someone';
-	const shortDate = (date: string) =>
-		new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString(undefined, {
-			day: 'numeric',
-			month: 'short'
-		});
 	// Stays open while editing (each save re-renders the page), and opens on an error.
 	let sizesOpen = $state(false);
 	$effect(() => {
@@ -32,14 +29,21 @@
 	const addSizeError = $derived(sizeFormError('add'));
 	const bulkSizesError = $derived(sizeFormError('bulk'));
 
-	const formatDate = (date: string) =>
+	const formatMonth = (date: string) =>
 		new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString(undefined, {
-			day: 'numeric',
 			month: 'short',
 			year: 'numeric'
 		});
 	const isOld = (date: string) =>
 		Date.now() - Date.parse(`${date.slice(0, 10)}T00:00:00`) > 365 * 864e5;
+	// Evergreen claims count over the last 6 months (db.ts RECENT), shown as a date.
+	const claimsSince = (() => {
+		const date = new Date();
+		date.setMonth(date.getMonth() - 6);
+		return date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+	})();
+	const timesText = (count: number) =>
+		count === 1 ? 'once' : count === 2 ? 'twice' : `${count} times`;
 	const givers = $derived(data.people.filter((p) => p.id !== data.owner.id));
 	const title = $derived(data.isOwner ? 'Your wishlist' : `${data.owner.name}’s wishlist`);
 
@@ -52,6 +56,32 @@
 
 	let addModal: Modal;
 	let bulkModal: Modal;
+	let askModal = $state<AskIdeasModal>();
+	let claimByModal: Modal;
+	// "Claim by…" picks from everyone but the list owner and you.
+	const otherGivers = $derived(givers.filter((p) => p.id !== data.actingId));
+	const claimLabel = (item: GiverItemView) =>
+		item.evergreen && item.recent_claims.length > 0 ? 'Claim too' : 'Claim';
+
+	/** The claim waiting on the "Claim by…" confirmation. */
+	let claimBy = $state<{ item: GiverItemView; giver: { id: string; name: string } } | null>(null);
+
+	function chooseClaimBy(item: GiverItemView, select: HTMLSelectElement) {
+		const giver = otherGivers.find((p) => p.id === select.value);
+		// Back to "Claim by…", so cancelling leaves nothing chosen.
+		select.selectedIndex = 0;
+		if (!giver) return;
+		claimBy = { item, giver };
+		claimByModal.open();
+	}
+
+	/** Close the confirmation either way: errors show on the item card. */
+	const closeClaimBy: import('$app/forms').SubmitFunction =
+		() =>
+		async ({ update }) => {
+			claimByModal.close();
+			await update();
+		};
 
 	/** Close a modal after its form succeeds; on an error it stays open to show it. */
 	const closeModalOnSuccess =
@@ -93,9 +123,20 @@
 	>
 	{#if !data.isOwner}
 		<a class="btn secondary" href="/people/{data.owner.id}/history">Past gifts</a>
-		<a class="btn secondary" href="/people/{data.owner.id}/ask">Ask for ideas</a>
+		<button
+			type="button"
+			class="secondary"
+			aria-haspopup="dialog"
+			command="show-modal"
+			commandfor="confirm-ask"
+			onclick={() => askModal?.open()}>Ask for ideas</button
+		>
 	{/if}
 {/snippet}
+
+{#if data.ask}
+	<AskIdeasModal bind:this={askModal} about={data.owner} ask={data.ask} />
+{/if}
 
 <Modal
 	bind:this={addModal}
@@ -144,6 +185,25 @@ always Fancy chocolates`}</pre>
 		{/if}
 		<button type="submit">Add all</button>
 	</form>
+</Modal>
+
+<Modal bind:this={claimByModal} id="claim-by" title="Claim for someone else?">
+	{#if claimBy}
+		<form method="POST" action="?/claim" use:enhance={closeClaimBy} class={styles.modalForm}>
+			<input type="hidden" name="item" value={claimBy.item.id} />
+			<input type="hidden" name="giver" value={claimBy.giver.id} />
+			<p>
+				Claim <strong>{claimBy.item.title}</strong> as a gift from
+				<strong>{claimBy.giver.name}</strong>?
+			</p>
+			<div class={styles.actions}>
+				<button type="submit">{claimLabel(claimBy.item)} for {claimBy.giver.name}</button>
+				<button type="button" class="secondary" onclick={() => claimByModal.close()}>
+					Cancel
+				</button>
+			</div>
+		</form>
+	{/if}
 </Modal>
 
 {#if data.canEditSizes}
@@ -244,80 +304,86 @@ Hat: remove`}</pre>
 					data-status={item.status}
 					data-evergreen={item.evergreen || undefined}
 				>
-					<div class={styles.itemHead}>
-						<h2 class={styles.itemTitle}>
-							{#if item.url}
-								<a href={item.url} target="_blank" rel="noopener noreferrer external">
-									{item.title}<span class="sr-only"> (opens in a new tab)</span>
-								</a>
-							{:else}
-								{item.title}
+					<div class={styles.itemMain}>
+						<div class={styles.itemBody}>
+							<div class={styles.itemHead}>
+								<h2 class={styles.itemTitle}>
+									{#if item.url}
+										<ExternalLink href={item.url}>{item.title}</ExternalLink>
+									{:else}
+										{item.title}
+									{/if}
+								</h2>
+								{#if isGiverView(item) && item.status === 'claimed'}
+									<Pill>
+										Claimed by {nameOf(item.claimed_by_id)}{item.entered_by_id &&
+										item.entered_by_id !== item.claimed_by_id
+											? ` (added by ${nameOf(item.entered_by_id)})`
+											: ''}
+									</Pill>
+								{/if}
+							</div>
+							{#if item.notes}<p class={styles.notes}>{item.notes}</p>{/if}
+
+							{#if item.evergreen}
+								<div class={styles.evergreen}>
+									<Pill colour="navy">Always wanted</Pill>
+									{#if isGiverView(item)}
+										<p class={styles.claims}>
+											Claimed {timesText(item.recent_claims.length)} since {claimsSince}.
+										</p>
+									{/if}
+								</div>
 							{/if}
-						</h2>
-						{#if item.evergreen}<Pill colour="navy">Always wanted</Pill>{/if}
-						{#if isGiverView(item) && item.status === 'claimed'}
-							<Pill>
-								Claimed by {nameOf(item.claimed_by_id)}{item.entered_by_id &&
-								item.entered_by_id !== item.claimed_by_id
-									? ` (added by ${nameOf(item.entered_by_id)})`
-									: ''}
-							</Pill>
+						</div>
+
+						{#if isGiverView(item) && (item.can_claim || item.can_unclaim)}
+							<div class={styles.itemActions}>
+								{#if item.can_claim}
+									<!-- No giver field: the server defaults to whoever you're acting as. -->
+									<form method="POST" action="?/claim" use:enhance>
+										<input type="hidden" name="item" value={item.id} />
+										<button type="submit">
+											{claimLabel(item)}<span class="sr-only"> {item.title}</span>
+										</button>
+									</form>
+									{#if otherGivers.length > 0}
+										<form method="POST" action="?/claim" use:enhance class={styles.claimBy}>
+											<input type="hidden" name="item" value={item.id} />
+											<label for="claim-by-{item.id}" class="sr-only">
+												Claim {item.title} as a gift from
+											</label>
+											<select
+												id="claim-by-{item.id}"
+												name="giver"
+												onchange={(e) => chooseClaimBy(item, e.currentTarget)}
+											>
+												<option value="" disabled selected>Claim by…</option>
+												{#each otherGivers as giver (giver.id)}
+													<option value={giver.id}>{giver.name}</option>
+												{/each}
+											</select>
+											<!-- Without JavaScript there's no confirmation: pick, then submit. -->
+											<noscript><button type="submit" class="secondary">Claim</button></noscript>
+										</form>
+									{/if}
+								{/if}
+								{#if item.can_unclaim}
+									<form method="POST" action="?/unclaim" use:enhance>
+										<input type="hidden" name="item" value={item.id} />
+										<button type="submit" class="secondary">
+											{item.evergreen ? 'Release my claim' : 'Release claim'}<span class="sr-only">
+												on {item.title}</span
+											>
+										</button>
+									</form>
+								{/if}
+							</div>
 						{/if}
 					</div>
-					{#if item.notes}<p class={styles.notes}>{item.notes}</p>{/if}
-
-					{#if isGiverView(item) && item.evergreen}
-						<p class={styles.claims}>
-							{#if item.recent_claims.length === 0}
-								Not claimed in the last 6 months.
-							{:else}
-								Claimed {item.recent_claims.length === 1
-									? 'once'
-									: `${item.recent_claims.length} times`} in the last 6 months:
-								{item.recent_claims
-									.map((c) => `${nameOf(c.claimed_by_id)} (${shortDate(c.created_at)})`)
-									.join(', ')}.
-							{/if}
-						</p>
-					{/if}
 
 					{#if itemError(item.id)}
 						<p class={styles.error} role="alert">{itemError(item.id)}</p>
-					{/if}
-
-					{#if isGiverView(item) && (item.can_claim || item.can_unclaim)}
-						<div class={styles.actions}>
-							{#if item.can_claim}
-								<form method="POST" action="?/claim" use:enhance class={styles.claim}>
-									<input type="hidden" name="item" value={item.id} />
-									<label for="giver-{item.id}" class="sr-only">Gift from</label>
-									<select id="giver-{item.id}" name="giver">
-										{#each givers as giver (giver.id)}
-											<option value={giver.id} selected={giver.id === data.actingId}>
-												From {giver.name}
-											</option>
-										{/each}
-									</select>
-									<button type="submit">
-										{item.evergreen && item.recent_claims.length > 0 ? 'Claim too' : 'Claim'}<span
-											class="sr-only"
-										>
-											{item.title}</span
-										>
-									</button>
-								</form>
-							{/if}
-							{#if item.can_unclaim}
-								<form method="POST" action="?/unclaim" use:enhance>
-									<input type="hidden" name="item" value={item.id} />
-									<button type="submit" class="secondary">
-										{item.evergreen ? 'Release my claim' : 'Release claim'}<span class="sr-only">
-											on {item.title}</span
-										>
-									</button>
-								</form>
-							{/if}
-						</div>
 					{/if}
 
 					{#if item.can_edit}
@@ -384,17 +450,18 @@ Hat: remove`}</pre>
 						<tr>
 							<th scope="col">For</th>
 							<th scope="col">Size</th>
-							<th scope="col">Updated</th>
 						</tr>
 					</thead>
 					<tbody>
 						{#each data.sizes as size (size.id)}
 							<tr>
 								<th scope="row">{size.item}</th>
-								<td>{size.size}</td>
-								<td class={styles.updated}>
-									{formatDate(size.updated_at)}
-									{#if isOld(size.updated_at)}<span class={styles.old}>(over a year ago)</span>{/if}
+								<td>
+									{size.size}
+									<small class={styles.updated}>
+										Updated {formatMonth(size.updated_at)}{#if isOld(size.updated_at)}
+											(over a year ago){/if}
+									</small>
 								</td>
 							</tr>
 						{/each}
@@ -445,10 +512,6 @@ Hat: remove`}</pre>
 					</ul>
 				</details>
 			{/if}
-		{:else}
-			<p class={styles.hint}>
-				Only {data.owner.name}, or someone acting as them, can change these.
-			</p>
 		{/if}
 	</Card>
 </div>

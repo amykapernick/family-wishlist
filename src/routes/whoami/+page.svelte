@@ -21,7 +21,9 @@
 			<PinField label="Your personal PIN" error={form?.message} autofocus />
 			<div class={styles.actions}>
 				<button type="submit">Continue</button>
-				<a href="/whoami" class="btn secondary">Not {chosen.name}?</a>
+				<button type="submit" formaction="?/forget" formnovalidate class="secondary">
+					Not {chosen.name}?
+				</button>
 			</div>
 		</form>
 	{:else}
@@ -39,7 +41,6 @@
 							class={styles.person}
 							aria-current={person.id === data.currentSelfId ? 'true' : undefined}
 						>
-							<span class={styles.avatar} aria-hidden="true">{person.name.slice(0, 1)}</span>
 							<span>{person.name}</span>
 							{#if person.has_pin}<span class={styles.hint}>PIN protected</span>{/if}
 						</button>

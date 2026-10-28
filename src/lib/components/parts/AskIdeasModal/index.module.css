@@ -1,0 +1,20 @@
+.form {
+	display: grid;
+	gap: 0.5em;
+
+	& p {
+		margin: 0;
+	}
+}
+
+.hint {
+	color: var(--text_secondary);
+	font-size: 0.85em;
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	margin-top: 0.5em;
+	gap: 0.5em;
+}

@@ -4,16 +4,17 @@ import type { ItemFields } from './db.ts';
 
 /**
  * Asking about someone goes to all of their recommenders (never the person
- * asking). If that leaves no one, the person themselves is asked, so they
- * can add to their own list.
+ * asking). If that leaves no one, or `alsoAskThem` is set, the person
+ * themselves is asked too, so they can add to their own list.
  */
 export function ideaTargets(
 	recommenderIds: readonly string[],
 	aboutId: string,
-	askerId: string
+	askerId: string,
+	alsoAskThem = false
 ): string[] {
 	const targets = [...new Set(recommenderIds)].filter((id) => id !== askerId && id !== aboutId);
-	return targets.length > 0 ? targets : [aboutId];
+	return targets.length === 0 || alsoAskThem ? [...targets, aboutId] : targets;
 }
 
 export const MAX_IDEAS = 20;

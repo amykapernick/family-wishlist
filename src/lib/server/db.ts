@@ -464,8 +464,13 @@ export async function setRecommenders(db: D1Database, personId: string, ids: rea
 }
 
 /** Asks everyone `ideaTargets` picks. Skips anyone already asked and not yet answered. */
-export async function askForIdeas(db: D1Database, fromId: string, aboutId: string) {
-	const askedIds = ideaTargets(await listRecommenders(db, aboutId), aboutId, fromId);
+export async function askForIdeas(
+	db: D1Database,
+	fromId: string,
+	aboutId: string,
+	alsoAskThem = false
+) {
+	const askedIds = ideaTargets(await listRecommenders(db, aboutId), aboutId, fromId, alsoAskThem);
 	return { askedIds, ...(await createIdeaRequests(db, { fromId, aboutId, askedIds })) };
 }
 

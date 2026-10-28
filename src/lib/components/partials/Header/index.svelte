@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { dev } from '$app/env';
 	import { page } from '$app/state';
-	import Switch from '#lib/components/parts/Switch/index.svelte';
-	import { theme, setTheme, type Theme } from '#lib/utils/theme.ts';
 	import styles from './index.module.css';
 
 	let {
@@ -27,18 +24,11 @@
 		...(identity.isAdmin ? [{ href: '/admin', label: 'Admin' }] : []),
 		...(dev ? [{ href: '/dev/sms', label: 'SMS preview' }] : [])
 	]);
+	// Wishlists stays selected on each person's list and its sub-pages.
 	const current = (href: string) =>
-		href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href);
-
-	// Positional, as in house's Switch: this order ties index 0/1 to a theme.
-	const themeOptions: Theme[] = [`dark`, `light`];
-
-	// The switch needs JavaScript, and the server can't know the stored theme,
-	// so it only renders once mounted. Without JS the system theme applies.
-	let mounted = $state(false);
-	onMount(() => {
-		mounted = true;
-	});
+		href === '/'
+			? page.url.pathname === '/' || page.url.pathname.startsWith('/people/')
+			: page.url.pathname.startsWith(href);
 </script>
 
 <header class={styles.header}>
@@ -50,19 +40,6 @@
 		</svg>
 		<span>Family Wishlist</span>
 	</a>
-
-	{#if mounted}
-		<Switch
-			class={styles.theme}
-			name="Colour mode"
-			value={themeOptions.indexOf($theme)}
-			toggleFunction={(index) => setTheme(themeOptions[index])}
-			options={[
-				{ label: 'Dark mode', icon: moon },
-				{ label: 'Light mode', icon: sun }
-			]}
-		/>
-	{/if}
 
 	<form method="POST" action="/acting" class={styles.acting}>
 		<input type="hidden" name="next" value={here} />
@@ -99,20 +76,3 @@
 		<button type="submit" class="text">Not you?</button>
 	</form>
 </header>
-
-{#snippet moon()}
-	<svg viewBox="0 0 24 24" aria-hidden="true">
-		<path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-	</svg>
-{/snippet}
-
-{#snippet sun()}
-	<svg viewBox="0 0 24 24" aria-hidden="true">
-		<circle cx="12" cy="12" r="5" fill="currentColor" />
-		<g stroke="currentColor" stroke-width="2" stroke-linecap="round">
-			<path
-				d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"
-			/>
-		</g>
-	</svg>
-{/snippet}

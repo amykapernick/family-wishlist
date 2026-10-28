@@ -24,5 +24,6 @@ export const GET: RequestHandler = async (event) => {
 		redirect(303, '/');
 	}
 	// Redirect straight away so the token doesn't linger in the address bar or history.
-	redirect(303, '/whoami');
+	// hooks.server.ts sends them on to /whoami if this device doesn't know who they are.
+	redirect(303, '/');
 };

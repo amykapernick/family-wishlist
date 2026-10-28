@@ -10,7 +10,6 @@
 </script>
 
 <a class={[styles.card, current && styles.current]} {href}>
-	<span class={styles.avatar} aria-hidden="true">{name.slice(0, 1)}</span>
 	<span class={styles.name}>{name}</span>
 	<span class={styles.detail}>{detail}</span>
 </a>

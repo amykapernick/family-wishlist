@@ -1,7 +1,7 @@
 /*
  * Semantic colours, following house's colours.css names. house switches
  * these with separate [data-theme] blocks; here each is one light-dark()
- * pair, so the same tokens also follow the system theme without JavaScript.
+ * pair that follows the device's light or dark setting.
  *
  * Text tokens are explicit values rather than color-mix() so their
  * contrast is fixed and checkable. Dark surfaces are a little darker than
@@ -35,12 +35,4 @@
 	--gradient_navy: linear-gradient(155deg, rgb(53 71 140), rgb(26 36 71));
 
 	color-scheme: light dark;
-
-	&[data-theme='light'] {
-		color-scheme: light;
-	}
-
-	&[data-theme='dark'] {
-		color-scheme: dark;
-	}
 }

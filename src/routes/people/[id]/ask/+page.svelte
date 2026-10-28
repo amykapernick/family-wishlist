@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import AskIdeasModal from '#lib/components/parts/AskIdeasModal/index.svelte';
 	import Card from '#lib/components/parts/Card/index.svelte';
 	import EmptyState from '#lib/components/parts/EmptyState/index.svelte';
 	import PageTitle from '#lib/components/parts/PageTitle/index.svelte';
@@ -12,6 +13,8 @@
 
 	const labels = { open: 'Waiting for a reply', answered: 'Answered', closed: 'Closed' };
 	const pillColours = { open: 'orange', answered: 'green', closed: 'navy' } as const;
+
+	let askModal: AskIdeasModal;
 </script>
 
 <svelte:head><title>Ideas for {data.about.name} · Family Wishlist</title></svelte:head>
@@ -27,16 +30,17 @@
 
 	<Card tag="section" theme="white" aria-labelledby="ask-heading">
 		<h2 id="ask-heading" class={styles.sectionTitle}>Ask for ideas</h2>
-		{#if data.asksThemselves}
+		{#if data.ask.asksThemselves}
 			<p>
 				{data.about.name} hasn’t chosen any recommenders, so we’ll ask {data.about.name} to add some ideas
 				to their list.
-				{#if data.targets[0].waiting}<span class={styles.hint}>(Already asked, waiting.)</span>{/if}
+				{#if data.ask.targets[0].waiting}<span class={styles.hint}>(Already asked, waiting.)</span
+					>{/if}
 			</p>
 		{:else}
 			<p>We’ll ask {data.about.name}’s recommenders:</p>
 			<ul class={styles.targets}>
-				{#each data.targets as person (person.id)}
+				{#each data.ask.targets as person (person.id)}
 					<li>
 						{person.name}
 						{#if person.waiting}<span class={styles.hint}>(already asked, waiting)</span>{/if}
@@ -44,11 +48,16 @@
 				{/each}
 			</ul>
 		{/if}
-		<p class={styles.hint}>Every answer is added to {data.about.name}’s list as well.</p>
-		<form method="POST" action="?/ask" use:enhance>
-			<button type="submit">Ask for ideas</button>
-		</form>
+		<button
+			type="button"
+			aria-haspopup="dialog"
+			command="show-modal"
+			commandfor="confirm-ask"
+			onclick={() => askModal.open()}>Ask for ideas</button
+		>
 	</Card>
+
+	<AskIdeasModal bind:this={askModal} about={data.about} ask={data.ask} />
 
 	<section aria-labelledby="requests-heading">
 		<h2 id="requests-heading">Requests about {data.about.name}</h2>

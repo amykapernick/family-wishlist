@@ -1,5 +1,6 @@
 <script lang="ts">
 	import EmptyState from '#lib/components/parts/EmptyState/index.svelte';
+	import ExternalLink from '#lib/components/parts/ExternalLink/index.svelte';
 	import PageTitle from '#lib/components/parts/PageTitle/index.svelte';
 	import type { PageProps } from './$types';
 	import styles from './+page.module.css';
@@ -51,9 +52,7 @@
 						<td>
 							{#if gift.evergreen}<span class="sr-only">Always wanted: </span>{/if}
 							{#if gift.url}
-								<a href={gift.url} target="_blank" rel="noopener noreferrer external">
-									{gift.title}<span class="sr-only"> (opens in a new tab)</span>
-								</a>
+								<ExternalLink href={gift.url}>{gift.title}</ExternalLink>
 							{:else}
 								{gift.title}
 							{/if}

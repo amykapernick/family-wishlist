@@ -12,19 +12,36 @@ import {
 } from '#lib/server/db.ts';
 import {
 	addUnlocked,
-	clearIdentity,
 	clientKey,
+	forgetIdentity,
 	getEnv,
+	getRememberedId,
 	safeNext,
 	setSelfCookie
 } from '#lib/server/session.ts';
 
 export const load: PageServerLoad = async (event) => {
 	const env = getEnv();
+	const people = await listPeople(env.DB);
+	let chosen = event.url.searchParams.get('as');
+
+	// Signed out but this device remembers who they are: don't ask again.
+	// Someone without a PIN goes straight back in; someone with one just
+	// gets their PIN prompt.
+	if (!event.locals.identity && !chosen) {
+		const rememberedId = await getRememberedId(event.cookies, env.COOKIE_SECRET);
+		const remembered = people.find((p) => p.id === rememberedId);
+		if (remembered && !remembered.pin_hash) {
+			await setSelfCookie(event.cookies, env.COOKIE_SECRET, remembered.id, false);
+			redirect(303, safeNext(event.url.searchParams.get('next')));
+		}
+		if (remembered) chosen = remembered.id;
+	}
+
 	return {
-		people: (await listPeople(env.DB)).map(toPublicPerson),
+		people: people.map(toPublicPerson),
 		currentSelfId: event.locals.identity?.self.id ?? null,
-		chosen: event.url.searchParams.get('as')
+		chosen
 	};
 };
 
@@ -87,7 +104,7 @@ export const actions: Actions = {
 	},
 
 	forget: async (event) => {
-		clearIdentity(event.cookies);
+		forgetIdentity(event.cookies);
 		redirect(303, '/whoami');
 	}
 };

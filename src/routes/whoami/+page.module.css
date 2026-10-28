@@ -45,17 +45,6 @@
 	}
 }
 
-.avatar {
-	display: grid;
-	width: 2.5em;
-	height: 2.5em;
-	place-items: center;
-	border-radius: 50%;
-	background: var(--purple_bright);
-	color: var(--purple_bright_text);
-	font-size: 1.2em;
-}
-
 .hint {
 	color: var(--text_secondary);
 	font-family: $font_main;

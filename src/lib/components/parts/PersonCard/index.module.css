@@ -22,19 +22,6 @@
 	}
 }
 
-.avatar {
-	display: grid;
-	width: 3em;
-	height: 3em;
-	place-items: center;
-	border-radius: 50%;
-	background: var(--purple_bright);
-	color: var(--purple_bright_text);
-	font-family: $font_heading;
-	font-size: 1.4em;
-	font-weight: 700;
-}
-
 .name {
 	font-family: $font_heading;
 	font-size: 1.3em;

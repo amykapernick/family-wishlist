@@ -14,6 +14,11 @@ describe('who is asked for ideas', () => {
 		expect(ideaTargets([], 'mia', 'alex')).toEqual(['mia']);
 		expect(ideaTargets(['alex'], 'mia', 'alex')).toEqual(['mia']);
 	});
+
+	it('also asks the person themselves when asked to', () => {
+		expect(ideaTargets(['sam', 'june'], 'mia', 'alex', true)).toEqual(['sam', 'june', 'mia']);
+		expect(ideaTargets([], 'mia', 'alex', true)).toEqual(['mia']);
+	});
 });
 
 describe('reading ideas from a message', () => {

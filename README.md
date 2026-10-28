@@ -23,7 +23,7 @@ Phase 1 (the web app) and phase 2 (text messages via Twilio) are both built. Tex
 ### How long people stay signed in
 
 - **Family link or family PIN:** one year on that device, or until an admin uses "Sign out every device" (or `COOKIE_SECRET` changes).
-- **Who you are:** a person without a personal PIN is remembered for a year. A person with a PIN (including every admin) is remembered only for the browser session, then asked for their PIN again. Some phone browsers restore sessions rather than ending them, so this can last longer in practice.
+- **Who you are:** after the family link or PIN, the app asks who you are once, then the device remembers your choice for a year, even through signing in again (an expired family cookie, or an admin signing everyone out). A person without a personal PIN goes straight back in. A person with a PIN (including every admin) stays signed in only for the browser session, then gets their own PIN prompt rather than the full list. Some phone browsers restore sessions rather than ending them, so this can last longer in practice. **Not you?** forgets the remembered person, so the next visit shows everyone again.
 - **Acting as someone else:** for the browser session.
 
 ## Styling and accessibility
@@ -31,7 +31,7 @@ Phase 1 (the web app) and phase 2 (text messages via Twilio) are both built. Tex
 Styles follow the conventions of the [house](https://github.com/amykapernick/house) project: custom CSS only, PostCSS (advanced-variables, nesting, mixins, hexrgba) configured in `config/postcss.config.js`, global styles and mixins in `src/lib/styles`, and a `.module.css` file beside each component (`src/lib/components/parts/<Name>/`) and page. Import mixins with `@import '@mixins';` and `@include`.
 
 - **Colours:** `src/lib/styles/global/palette.css` holds the base palette and `colours.css` the semantic tokens (`--page_bg`, `--text_secondary`, `--border`…), using house's names. Values marked _(placeholder)_ weren't available outside house's colours API; swap in the real values to match exactly.
-- **Light and dark:** follows the system setting, or the header switch (saved in the browser). Tokens use `light-dark()`, so the system theme works without JavaScript.
+- **Light and dark:** follows the device setting, with no switch in the app. Tokens use `light-dark()`, so it works without JavaScript.
 - **WCAG 2.2 AAA:** text colours are tuned to at least 7:1 against every background they sit on, which meant darkening house's purple and navy in light mode and darkening its dark-mode surfaces. Buttons use a darkening gradient for the same reason, links are always underlined, and every control is at least 44px tall. Check changes with axe's `color-contrast-enhanced` rule in both themes.
 - **Linting:** `npm run lint` runs Prettier (code) and stylelint (CSS, using house's stylelint setup). Stylelint owns CSS formatting, so Prettier skips `.css` files.
 

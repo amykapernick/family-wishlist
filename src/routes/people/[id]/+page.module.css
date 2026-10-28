@@ -1,3 +1,5 @@
+@import '@mixins';
+
 .page {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
@@ -30,6 +32,37 @@
 	}
 }
 
+.itemMain {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 0.75em 1em;
+}
+
+.itemBody {
+	display: grid;
+	flex: 1 1 15em;
+	gap: 0.5em;
+}
+
+/* Claim sits beside the item, with the other claim buttons stacked under it. */
+.itemActions {
+	display: grid;
+	justify-items: stretch;
+	gap: 0.35em;
+
+	/* A little smaller than standard buttons, but still 44px tall (min-height). */
+	& button,
+	& select {
+		width: 100%;
+		margin: 0;
+		padding-right: 0.75em;
+		padding-left: 0.75em;
+		font-size: 0.9em;
+	}
+}
+
+
 .itemHead {
 	display: flex;
 	flex-wrap: wrap;
@@ -47,6 +80,17 @@
 	color: var(--text_secondary);
 }
 
+/* "Always wanted" at the bottom of the item, its recent claims in small below. */
+.evergreen {
+	display: grid;
+	justify-items: start;
+	gap: 0.3em;
+}
+
+.claims {
+	font-size: 0.85em;
+}
+
 .error {
 	color: var(--error);
 	font-weight: 600;
@@ -59,15 +103,52 @@
 	gap: 0.5em;
 }
 
-.claim {
+/* "Claim by…" is a select dressed as a secondary button, with its own arrow. */
+.claimBy {
 	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
+	position: relative;
 	gap: 0.5em;
 
 	& select {
+
+		@include button;
+
+		@include button_secondary;
+
+		min-height: 2.75rem;
+		padding-right: 2em;
+		font-size: 0.9em;
+		text-align: center;
+		text-align-last: center;
+		appearance: none;
+	}
+
+	& option {
+		background: var(--input_bg);
+		color: var(--text_primary);
+		font-family: $font_main;
+	}
+
+	/* Arrow, in the select's text colour (it swaps on hover like the button). */
+	&::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		right: 0.85em;
+		width: 0.45em;
+		height: 0.45em;
+		transform: translateY(-70%) rotate(45deg);
+		border-right: 2px solid var(--navy);
+		border-bottom: 2px solid var(--navy);
+		pointer-events: none;
+	}
+
+	&:has(select:hover)::after {
+		border-color: var(--navy_text);
+	}
+
+	& button {
 		width: auto;
-		margin: 0;
 	}
 }
 
@@ -107,18 +188,16 @@
 	}
 }
 
+/* Under the size, in the same cell. */
 .updated {
-	white-space: nowrap;
+	display: block;
+	color: var(--text_secondary);
+	font-size: 0.8em;
 }
 
-.old,
 .hint {
 	color: var(--text_secondary);
 	font-size: 0.9em;
-}
-
-.old {
-	margin-left: 0.3em;
 }
 
 .sizeRows {
