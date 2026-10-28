@@ -83,6 +83,29 @@
 	gap: 0 1em;
 }
 
+/* A group's link: a read-only field, selected on focus for copying. */
+.groupLink {
+	display: grid;
+	gap: 0.2em;
+
+	& input {
+		margin: 0;
+	}
+}
+
+/* A person's group checkboxes, under their other details. */
+.groups {
+	margin: 0.75em 0 0;
+	padding: 0;
+	border: none;
+
+	& legend {
+		margin-bottom: 0.25em;
+		padding: 0;
+		font-weight: 600;
+	}
+}
+
 /* A recommenders row: name, chips, then the dashed "Add person" pill. */
 .recommenderRow {
 	display: flex;

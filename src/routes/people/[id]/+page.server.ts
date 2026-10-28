@@ -12,6 +12,7 @@ import {
 	listItemsFor,
 	listRecentClaims,
 	listSizes,
+	nameMap,
 	removeSize,
 	removeSizeById,
 	setSize,
@@ -46,20 +47,33 @@ export const load: PageServerLoad = async (event) => {
 	const owner = findPerson(identity, event.params.id);
 	const db = getEnv().DB;
 	const isOwner = identity.acting.id === owner.id;
-	const [rows, claims, sizes, ask] = await Promise.all([
+	const [rows, claims, sizes, ask, names] = await Promise.all([
 		listItemsFor(db, owner.id),
 		// Never loaded for the owner, so it can't leak into their page data.
 		isOwner ? [] : listRecentClaims(db, owner.id),
 		listSizes(db, owner.id),
 		// For the "Ask for ideas" dialog; requests about the owner are spoilers too.
-		isOwner ? null : loadAskTargets(db, identity, owner).then(({ requests: _, ...ask }) => ask)
+		isOwner
+			? null
+			: loadAskTargets(db, identity, owner).then(({ requests: _, names: __, ...ask }) => ask),
+		isOwner ? null : nameMap(db)
 	]);
+	// Whoever claimed something is named even if they're outside your groups.
+	const claimerIds = new Set(
+		[
+			...rows.flatMap((r) => [r.claimed_by_id, r.entered_by_id]),
+			...claims.flatMap((c) => [c.claimed_by_id, c.entered_by_id])
+		].filter((id): id is string => id !== null)
+	);
 	return {
 		owner,
 		isOwner,
 		items: viewWishlist(identity.acting.id, claimantIdList(identity), owner.id, rows, claims),
-		// Names for "claimed by"; never needed (or sent) on the owner's own view.
+		// Givers for "Claim by…"; never needed (or sent) on the owner's own view.
 		people: isOwner ? [] : identity.people.map(({ id, name }) => ({ id, name })),
+		claimerNames: Object.fromEntries(
+			[...claimerIds].flatMap((id) => (names?.has(id) ? [[id, names.get(id)!]] : []))
+		) as Record<string, string>,
 		actingId: identity.acting.id,
 		sizes,
 		ask,

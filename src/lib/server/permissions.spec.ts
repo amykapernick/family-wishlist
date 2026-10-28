@@ -10,7 +10,8 @@ import {
 	hasAdminAccess,
 	isLockedFor,
 	leavesNoAdmin,
-	removalMode
+	removalMode,
+	visibleIds
 } from './permissions.ts';
 
 describe('acting as', () => {
@@ -136,5 +137,27 @@ describe('admin', () => {
 		const none = family.map((p) => ({ ...p, is_admin: false }));
 		expect(leavesNoAdmin(none, { personId: 'mia', isAdmin: true })).toBe(true);
 		expect(leavesNoAdmin(none, { personId: 'alex', isAdmin: true })).toBe(false);
+	});
+});
+
+describe('groups', () => {
+	const memberships = [
+		{ person_id: 'mia', group_id: 'mums' },
+		{ person_id: 'sam', group_id: 'mums' },
+		{ person_id: 'sam', group_id: 'dads' },
+		{ person_id: 'leo', group_id: 'dads' }
+	];
+	const sees = (id: string) => [...visibleIds(id, memberships)].sort();
+
+	it('shows people who share a group', () => {
+		expect(sees('mia')).toEqual(['mia', 'sam']);
+	});
+
+	it('shows members of every group someone is in', () => {
+		expect(sees('sam')).toEqual(['leo', 'mia', 'sam']);
+	});
+
+	it('shows someone in no group only themselves', () => {
+		expect(sees('june')).toEqual(['june']);
 	});
 });

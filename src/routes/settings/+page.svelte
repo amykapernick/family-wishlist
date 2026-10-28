@@ -98,6 +98,7 @@
 			<p>Add and update family members, links and security in <a href="/admin">Admin</a>.</p>
 		{:else if data.hasAdmin}
 			<p>A family admin can add, update or remove family members.</p>
+			<p><a href="/whoami?only=admins&next=%2Fadmin">Log in as admin</a></p>
 		{:else}
 			<p>No one has admin access yet. See “Making someone an admin” in the README to set one up.</p>
 		{/if}

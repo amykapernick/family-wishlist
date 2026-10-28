@@ -14,6 +14,16 @@ export interface PersonRow {
 	created_at: string;
 }
 
+export interface GroupRow {
+	id: string;
+	name: string;
+}
+
+export interface MembershipRow {
+	person_id: string;
+	group_id: string;
+}
+
 export interface PublicPerson {
 	id: string;
 	name: string;

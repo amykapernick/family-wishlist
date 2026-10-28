@@ -8,6 +8,7 @@ import {
 	recordFailedAttempt
 } from '#lib/server/db.ts';
 import {
+	clearGroupCookie,
 	clientKey,
 	getEnv,
 	hasFamilyCookie,
@@ -36,6 +37,8 @@ export const actions: Actions = {
 		}
 		await clearAttempts(env.DB, key);
 		await setFamilyCookie(event.cookies, env.COOKIE_SECRET, await getSessionEpoch(env.DB));
+		// Like the family link, the family PIN offers every group.
+		clearGroupCookie(event.cookies);
 		redirect(303, safeNext(event.url.searchParams.get('next')));
 	}
 };

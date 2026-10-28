@@ -4,15 +4,18 @@ import {
 	answerIdeaRequest,
 	getIdeaRequest,
 	listRequestsAsked,
-	listRequestsFrom
+	listRequestsFrom,
+	nameMap
 } from '#lib/server/db.ts';
-import { findPerson, requireIdentity, requiredText } from '#lib/server/guard.ts';
+import { requireIdentity, requiredText } from '#lib/server/guard.ts';
 import { getEnv } from '#lib/server/session.ts';
 
 export const load: PageServerLoad = async (event) => {
 	const identity = requireIdentity(event.locals);
 	const db = getEnv().DB;
-	const nameOf = (id: string) => identity.people.find((p) => p.id === id)?.name ?? 'Someone';
+	// Requests can cross groups (recommenders), so names come from the whole family.
+	const names = await nameMap(db);
+	const nameOf = (id: string) => names.get(id) ?? 'Someone';
 	const named = <T extends { from_id: string; about_id: string; asked_id: string }>(r: T) => ({
 		...r,
 		fromName: nameOf(r.from_id),
@@ -42,7 +45,7 @@ export const actions: Actions = {
 			response.value,
 			self ? null : identity.acting.name
 		);
-		const about = self ? 'your' : `${findPerson(identity, request.about_id).name}’s`;
+		const about = self ? 'your' : `${(await nameMap(db)).get(request.about_id) ?? 'their'}’s`;
 		return {
 			message: added.length
 				? `Thanks! Your ideas were sent, and ${added.length === 1 ? '1 item was' : `${added.length} items were`} added to ${about} list.`

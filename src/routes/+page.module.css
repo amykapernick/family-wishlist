@@ -6,3 +6,7 @@
 	list-style: none;
 	gap: 1em;
 }
+
+.section + .section {
+	margin-top: 2em;
+}

@@ -19,6 +19,7 @@
 	const here = $derived(page.url.pathname + page.url.search);
 	const nav = $derived([
 		{ href: '/', label: 'Wishlists' },
+		{ href: '/gifts', label: 'Gifts' },
 		{ href: '/requests', label: 'Requests' },
 		{ href: '/settings', label: 'Settings' },
 		...(identity.isAdmin ? [{ href: '/admin', label: 'Admin' }] : []),

@@ -45,6 +45,12 @@
 	}
 }
 
+/* Group tiles are links styled like the person tiles. */
+a.person {
+	place-items: center;
+	text-decoration: none;
+}
+
 .hint {
 	color: var(--text_secondary);
 	font-family: $font_main;

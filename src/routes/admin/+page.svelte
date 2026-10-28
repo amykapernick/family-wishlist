@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import Card from '#lib/components/parts/Card/index.svelte';
 	import PageTitle from '#lib/components/parts/PageTitle/index.svelte';
 	import Pill from '#lib/components/parts/Pill/index.svelte';
@@ -10,6 +11,7 @@
 	let { data, form }: PageProps = $props();
 
 	const nameOf = (id: string) => data.people.find((p) => p.id === id)?.name ?? 'Someone';
+	const groupName = (id: string) => data.groups.find((g) => g.id === id)?.name ?? '';
 	const failed = $derived(form && 'field' in form ? form : null);
 	const succeeded = $derived(form && !('field' in form) ? form.message : null);
 	const keep: import('$app/forms').SubmitFunction =
@@ -62,6 +64,79 @@
 	<StatusMessage message={succeeded} />
 	{#if failed}<p class={styles.error} role="alert">{failed.message}</p>{/if}
 
+	<Card tag="section" theme="white" aria-labelledby="groups-heading">
+		<h2 id="groups-heading" class={styles.sectionTitle}>Groups</h2>
+		<p class={styles.hint}>
+			People only see family members who share a group with them. Someone in no group only sees
+			themselves. Choose each person’s groups under Family members. This page always shows everyone.
+		</p>
+		{#if data.groups.length > 0}
+			<ul class={styles.people}>
+				{#each data.groups as group (group.id)}
+					<li>
+						<details class={styles.details}>
+							<summary>
+								<span class={styles.personName}>{group.name}</span>
+								<span class={styles.hint}>
+									{group.members === 1 ? '1 person' : `${group.members} people`}
+								</span>
+							</summary>
+							<form method="POST" action="?/renameGroup" use:enhance={keep}>
+								<input type="hidden" name="group" value={group.id} />
+								<label for="group-name-{group.id}">Name</label>
+								<input
+									id="group-name-{group.id}"
+									name="group_name"
+									value={group.name}
+									required
+									maxlength="60"
+								/>
+								<button type="submit">Rename</button>
+							</form>
+							<p class={styles.groupLink}>
+								<label for="group-link-{group.id}">Link for {group.name}</label>
+								<input
+									id="group-link-{group.id}"
+									readonly
+									value="{page.url.origin}{group.link}"
+									onfocus={(e) => e.currentTarget.select()}
+									aria-describedby="group-link-hint-{group.id}"
+								/>
+								<span id="group-link-hint-{group.id}" class={styles.hint}>
+									Like the family link, it skips the family PIN, but “Who are you?” only offers
+									{group.name}.
+								</span>
+							</p>
+							<form method="POST" action="?/renewGroupLink" use:enhance>
+								<input type="hidden" name="group" value={group.id} />
+								<button type="submit" class="secondary">Make a new link</button>
+							</form>
+							<details class={styles.details}>
+								<summary class={styles.danger}>Delete {group.name}…</summary>
+								<p>
+									Its members stay in the family, just no longer in this group. Anyone left in no
+									group will only see themselves.
+								</p>
+								<form method="POST" action="?/deleteGroup" use:enhance>
+									<input type="hidden" name="group" value={group.id} />
+									<button type="submit" class="danger">Yes, delete {group.name}</button>
+								</form>
+							</details>
+						</details>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+		<details class={styles.details} open={failed?.field === 'group_name' || undefined}>
+			<summary>Add a group</summary>
+			<form method="POST" action="?/addGroup" use:enhance>
+				<label for="group-name-new">Name</label>
+				<input id="group-name-new" name="group_name" required maxlength="60" />
+				<button type="submit">Add group</button>
+			</form>
+		</details>
+	</Card>
+
 	<Card tag="section" theme="white" aria-labelledby="people-heading">
 		<h2 id="people-heading" class={styles.sectionTitle}>Family members</h2>
 		<p class={styles.hint}>
@@ -82,6 +157,11 @@
 								{/if}
 								{#if person.has_pin}<Pill colour="green" outline>PIN</Pill>{/if}
 								{#if person.id === data.selfId}<Pill colour="navy">You</Pill>{/if}
+								{#each person.groups as id (id)}<Pill colour="navy" outline>{groupName(id)}</Pill
+									>{/each}
+								{#if person.groups.length === 0 && data.groups.length > 0}
+									<Pill colour="orange" outline>No group</Pill>
+								{/if}
 							</span>
 						</summary>
 						<form method="POST" action="?/updatePerson" use:enhance={keep}>
@@ -163,6 +243,7 @@ Leo`}</pre>
 						{/if}
 					</div>
 				{/if}
+				{@render groupFields('bulk', [])}
 				<button type="submit">Add everyone</button>
 			</form>
 		</details>
@@ -172,8 +253,8 @@ Leo`}</pre>
 		<h2 id="recommenders-heading" class={styles.sectionTitle}>Recommenders</h2>
 		<p class={styles.hint}>
 			Who is asked for gift ideas about each person. Their answers are added to that person’s list.
-			With no recommenders, the person themselves is asked. People can also set their own in
-			Settings.
+			With no recommenders, the person themselves is asked. Recommenders must share a group with the
+			person. People can also set their own in Settings.
 		</p>
 		<ul class={styles.people}>
 			{#each data.people as person (person.id)}
@@ -219,7 +300,7 @@ Leo`}</pre>
 							<fieldset>
 								<legend>Recommenders for {person.name}</legend>
 								<ul class={styles.checklist}>
-									{#each data.people.filter((p) => p.id !== person.id) as other (other.id)}
+									{#each data.people.filter((p) => p.id !== person.id && p.groups.some( (g) => person.groups.includes(g) )) as other (other.id)}
 										<li>
 											<label>
 												<input
@@ -301,9 +382,33 @@ Leo`}</pre>
 	</Card>
 </div>
 
+{#snippet groupFields(key: string, chosen: string[])}
+	{#if data.groups.length > 0}
+		<fieldset class={styles.groups}>
+			<legend>Groups</legend>
+			<ul class={styles.checklist}>
+				{#each data.groups as group (group.id)}
+					<li>
+						<label>
+							<input
+								type="checkbox"
+								name="group"
+								value={group.id}
+								id="group-{key}-{group.id}"
+								checked={chosen.includes(group.id)}
+							/>
+							{group.name}
+						</label>
+					</li>
+				{/each}
+			</ul>
+		</fieldset>
+	{/if}
+{/snippet}
+
 {#snippet personFields(
 	key: string,
-	person: { name: string; phone: string | null; is_admin: boolean } | null
+	person: { name: string; phone: string | null; is_admin: boolean; groups: string[] } | null
 )}
 	<label for="name-{key}">Name</label>
 	<input id="name-{key}" name="name" value={person?.name ?? ''} required maxlength="80" />
@@ -320,4 +425,5 @@ Leo`}</pre>
 		<input type="checkbox" name="is_admin" checked={person?.is_admin ?? false} />
 		Admin (can manage the family and the app)
 	</label>
+	{@render groupFields(key, person?.groups ?? [])}
 {/snippet}

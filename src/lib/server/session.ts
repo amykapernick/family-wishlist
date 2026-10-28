@@ -3,8 +3,9 @@
 //                or until an admin signs out every device)
 //   fw_self    - which person this browser belongs to
 //   fw_acting  - who they are acting as right now (browser session)
-// plus fw_unlocked, the personal PINs verified this browser session, and
-// fw_remember, who last chose themselves here (1 year, outlives the others).
+// plus fw_unlocked, the personal PINs verified this browser session,
+// fw_remember, who last chose themselves here (1 year, outlives the others),
+// and fw_group, set by a group's link: "Who are you?" only offers that group.
 
 import type { Cookies, RequestEvent } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
@@ -18,7 +19,8 @@ export const COOKIE = {
 	self: 'fw_self',
 	acting: 'fw_acting',
 	unlocked: 'fw_unlocked',
-	remember: 'fw_remember'
+	remember: 'fw_remember',
+	group: 'fw_group'
 } as const;
 
 type CookieName = (typeof COOKIE)[keyof typeof COOKIE];
@@ -92,6 +94,20 @@ export async function setSelfCookie(
 	await setSigned(cookies, secret, COOKIE.self, personId, hasPin ? undefined : YEAR);
 	await setSigned(cookies, secret, COOKIE.remember, personId, YEAR);
 	cookies.delete(COOKIE.acting, { path: '/' });
+}
+
+/** A group link limits this device's "Who are you?" to that group. */
+export async function setGroupCookie(cookies: Cookies, secret: string, groupId: string) {
+	await setSigned(cookies, secret, COOKIE.group, groupId, YEAR);
+}
+
+export async function getGroupId(cookies: Cookies, secret: string) {
+	return getSigned(cookies, secret, COOKIE.group);
+}
+
+/** The family link or PIN gives the whole family again. */
+export function clearGroupCookie(cookies: Cookies) {
+	cookies.delete(COOKIE.group, { path: '/' });
 }
 
 /** Who last chose themselves on this device, even after being signed out. */

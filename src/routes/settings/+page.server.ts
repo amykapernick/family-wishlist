@@ -1,22 +1,42 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { hashPin, verifyPin } from '#lib/server/crypto.ts';
-import { getPerson, listRecommenders, setPersonPin, setRecommenders } from '#lib/server/db.ts';
+import {
+	getPerson,
+	listMemberships,
+	listPeople,
+	listRecommenders,
+	setPersonPin,
+	setRecommenders
+} from '#lib/server/db.ts';
 import { findPerson, requireIdentity } from '#lib/server/guard.ts';
-import { canManagePin, canManageRecommenders } from '#lib/server/permissions.ts';
+import { canManagePin, canManageRecommenders, visibleIds } from '#lib/server/permissions.ts';
 import { addUnlocked, getEnv } from '#lib/server/session.ts';
+
+/** People who can recommend for `personId`: anyone you can see who shares a group with them. */
+async function recommenderChoices(identity: App.Identity, personId: string) {
+	const sharesGroup = visibleIds(personId, await listMemberships(getEnv().DB));
+	return identity.people.filter((p) => p.id !== personId && sharesGroup.has(p.id));
+}
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const identity = requireIdentity(locals);
-	const recommenders = await listRecommenders(getEnv().DB, identity.acting.id);
+	const db = getEnv().DB;
+	const [recommenders, everyone, choices] = await Promise.all([
+		listRecommenders(db, identity.acting.id),
+		listPeople(db),
+		recommenderChoices(identity, identity.acting.id)
+	]);
 	return {
 		acting: identity.acting,
-		// Everyone but the person can be one of their recommenders.
-		recommenderOptions: identity.people
-			.filter((p) => p.id !== identity.acting.id)
-			.map((p) => ({ id: p.id, name: p.name, chosen: recommenders.includes(p.id) })),
+		recommenderOptions: choices.map((p) => ({
+			id: p.id,
+			name: p.name,
+			chosen: recommenders.includes(p.id)
+		})),
 		isAdmin: identity.isAdmin,
-		hasAdmin: identity.people.some((p) => p.is_admin && p.has_pin)
+		// Across the whole family: the admin may be in another group.
+		hasAdmin: everyone.some((p) => p.is_admin === 1 && p.pin_hash !== null)
 	};
 };
 
@@ -29,8 +49,12 @@ export const actions: Actions = {
 			error(403, 'Switch to acting as this person to choose their recommenders.');
 		}
 		const ids = [...new Set(form.getAll('recommender').map(String))];
-		if (ids.some((id) => id === person.id || !identity.people.some((p) => p.id === id))) {
-			return fail(400, { field: 'recommender', message: 'Choose people from the family.' });
+		const choices = await recommenderChoices(identity, person.id);
+		if (ids.some((id) => !choices.some((p) => p.id === id))) {
+			return fail(400, {
+				field: 'recommender',
+				message: `Choose people who share a group with ${person.name}.`
+			});
 		}
 		await setRecommenders(getEnv().DB, person.id, ids);
 		return {

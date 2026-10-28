@@ -21,7 +21,7 @@ declare global {
 			acting: PublicPerson;
 			/** Everyone `self` can act as (self first, then the family), and whether a PIN is still needed. */
 			actable: (PublicPerson & { locked: boolean })[];
-			/** Everyone in the family, for name lookups and pickers. */
+			/** Everyone `self` can see (shares a group with), for name lookups and pickers. */
 			people: PublicPerson[];
 			/** `self` is an admin with a PIN (see permissions.hasAdminAccess). */
 			isAdmin: boolean;

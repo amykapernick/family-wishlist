@@ -2,7 +2,13 @@ import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { timingSafeEqual } from '#lib/server/crypto.ts';
 import { getPerson, getSessionEpoch } from '#lib/server/db.ts';
-import { clearIdentity, getEnv, setFamilyCookie, setSelfCookie } from '#lib/server/session.ts';
+import {
+	clearGroupCookie,
+	clearIdentity,
+	getEnv,
+	setFamilyCookie,
+	setSelfCookie
+} from '#lib/server/session.ts';
 
 export const GET: RequestHandler = async (event) => {
 	const env = getEnv();
@@ -10,6 +16,8 @@ export const GET: RequestHandler = async (event) => {
 		error(404, 'This family link is not valid. Ask a family member for a new one.');
 	}
 	await setFamilyCookie(event.cookies, env.COOKIE_SECRET, await getSessionEpoch(env.DB));
+	// The family link offers every group again, even on a device a group link set up.
+	clearGroupCookie(event.cookies);
 
 	// The link texted by the `link` SMS command adds ?me=<person> to pick who
 	// this is. It grants nothing the family link doesn't already (anyone with

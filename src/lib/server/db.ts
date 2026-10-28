@@ -1,9 +1,11 @@
 // D1 queries. Plain prepared statements; callers check permissions first.
 
 import type {
+	GroupRow,
 	IdeaRequestRow,
 	ItemClaimRow,
 	ItemRow,
+	MembershipRow,
 	PersonRow,
 	PublicPerson,
 	SizeRow
@@ -49,16 +51,37 @@ export async function createPerson(
 	return id;
 }
 
-/** Adds several people (not admins, no PINs) all at once, or none if one fails. */
+/**
+ * Adds several people (not admins, no PINs) all at once, each in `groupIds`,
+ * or none if one fails.
+ */
 export async function createPeople(
 	db: D1Database,
-	people: readonly { name: string; phone: string | null }[]
+	people: readonly { name: string; phone: string | null }[],
+	groupIds: readonly string[] = []
 ) {
 	if (people.length === 0) return;
 	const insert = db.prepare(
 		`INSERT INTO people (id, name, kind, phone, is_admin, pin_hash) VALUES (?, ?, 'adult', ?, 0, NULL)`
 	);
-	await db.batch(people.map((p) => insert.bind(crypto.randomUUID(), p.name, p.phone)));
+	const join = db.prepare('INSERT INTO person_groups (person_id, group_id) VALUES (?, ?)');
+	await db.batch(
+		people.flatMap((p) => {
+			const id = crypto.randomUUID();
+			return [insert.bind(id, p.name, p.phone), ...groupIds.map((g) => join.bind(id, g))];
+		})
+	);
+}
+
+/**
+ * Everyone's name by id, across every group: for names that should show even
+ * outside your groups (who claimed something, recommenders, idea requests).
+ */
+export async function nameMap(db: D1Database): Promise<Map<string, string>> {
+	const { results } = await db
+		.prepare('SELECT id, name FROM people')
+		.all<{ id: string; name: string }>();
+	return new Map(results.map((p) => [p.id, p.name]));
 }
 
 export async function setPersonAdmin(db: D1Database, id: string, isAdmin: boolean) {
@@ -116,6 +139,7 @@ export async function deletePerson(db: D1Database, id: string) {
 		run('DELETE FROM sizes WHERE person_id = ?1'),
 		run('DELETE FROM can_act_for WHERE ?1 IN (person_id, acts_for_id)'),
 		run(`DELETE FROM auth_attempts WHERE key LIKE 'person:' || ?1 || ':%'`),
+		run('DELETE FROM person_groups WHERE person_id = ?1'),
 		run('DELETE FROM people WHERE id = ?1')
 	]);
 }
@@ -133,6 +157,79 @@ export async function updatePerson(
 
 export async function setPersonPin(db: D1Database, id: string, pinHash: string | null) {
 	await db.prepare('UPDATE people SET pin_hash = ? WHERE id = ?').bind(pinHash, id).run();
+}
+
+// ---------------------------------------------------------------- groups
+
+export async function listGroups(db: D1Database): Promise<GroupRow[]> {
+	const { results } = await db
+		.prepare('SELECT id, name FROM family_groups ORDER BY name')
+		.all<GroupRow>();
+	return results;
+}
+
+export async function listMemberships(db: D1Database): Promise<MembershipRow[]> {
+	const { results } = await db
+		.prepare('SELECT person_id, group_id FROM person_groups')
+		.all<MembershipRow>();
+	return results;
+}
+
+/** A random token for a group's link. */
+const groupToken = () => crypto.randomUUID().replaceAll('-', '');
+
+export async function createGroup(db: D1Database, name: string): Promise<string> {
+	const id = crypto.randomUUID();
+	await db
+		.prepare('INSERT INTO family_groups (id, name, token) VALUES (?, ?, ?)')
+		.bind(id, name, groupToken())
+		.run();
+	return id;
+}
+
+/** Each group's link token, for the admin page only. */
+export async function listGroupTokens(db: D1Database): Promise<Record<string, string>> {
+	const { results } = await db
+		.prepare('SELECT id, token FROM family_groups')
+		.all<{ id: string; token: string }>();
+	return Object.fromEntries(results.map((g) => [g.id, g.token]));
+}
+
+export async function getGroupByToken(db: D1Database, token: string): Promise<GroupRow | null> {
+	return db
+		.prepare('SELECT id, name FROM family_groups WHERE token = ?')
+		.bind(token)
+		.first<GroupRow>();
+}
+
+/** Replaces the group's link; the old one stops working. */
+export async function renewGroupToken(db: D1Database, id: string) {
+	await db.prepare('UPDATE family_groups SET token = ? WHERE id = ?').bind(groupToken(), id).run();
+}
+
+export async function renameGroup(db: D1Database, id: string, name: string) {
+	await db.prepare('UPDATE family_groups SET name = ? WHERE id = ?').bind(name, id).run();
+}
+
+/** Deletes the group; its members stay, just no longer in it. */
+export async function deleteGroup(db: D1Database, id: string) {
+	await db.batch([
+		db.prepare('DELETE FROM person_groups WHERE group_id = ?').bind(id),
+		db.prepare('DELETE FROM family_groups WHERE id = ?').bind(id)
+	]);
+}
+
+/** Replaces the person's groups with `groupIds`. */
+export async function setPersonGroups(
+	db: D1Database,
+	personId: string,
+	groupIds: readonly string[]
+) {
+	const join = db.prepare('INSERT INTO person_groups (person_id, group_id) VALUES (?, ?)');
+	await db.batch([
+		db.prepare('DELETE FROM person_groups WHERE person_id = ?').bind(personId),
+		...groupIds.map((g) => join.bind(personId, g))
+	]);
 }
 
 // ---------------------------------------------------------------- items
@@ -250,6 +347,36 @@ export async function archiveItem(db: D1Database, id: string) {
 // ------------------------------------------------------ evergreen claims
 
 const RECENT = `datetime('now', '-6 months')`;
+
+/**
+ * Gifts `giverId` claimed in the last six months, newest first: claimed (or
+ * since archived) items, and each of their claims on evergreen items.
+ */
+export async function listRecentGiftsFrom(db: D1Database, giverId: string) {
+	const { results } = await db
+		.prepare(
+			`SELECT i.id AS id, i.owner_id, i.title, i.url, i.notes, 0 AS evergreen, i.claimed_at
+			   FROM items i
+			  WHERE i.claimed_by_id = ?1 AND i.status IN ('claimed', 'archived')
+			    AND i.claimed_at >= ${RECENT}
+			 UNION ALL
+			 SELECT c.id, i.owner_id, i.title, i.url, i.notes, 1, c.created_at
+			   FROM item_claims c JOIN items i ON i.id = c.item_id
+			  WHERE c.claimed_by_id = ?1 AND c.created_at >= ${RECENT}
+			 ORDER BY claimed_at DESC`
+		)
+		.bind(giverId)
+		.all<{
+			id: string;
+			owner_id: string;
+			title: string;
+			url: string | null;
+			notes: string | null;
+			evergreen: 0 | 1;
+			claimed_at: string;
+		}>();
+	return results;
+}
 
 /** Evergreen claims on someone's list from the last six months, newest first. */
 export async function listRecentClaims(db: D1Database, ownerId: string): Promise<ItemClaimRow[]> {
@@ -439,16 +566,23 @@ export async function answerIdeaRequest(
 // Stored in the spec's `contacts` table: person_id is the person, contact_id
 // one of the people asked for ideas about them.
 
+// A recommender must share a group with the person. Anyone saved before a
+// regroup who no longer does is ignored (and dropped the next time the
+// person's recommenders are saved).
+const SHARES_GROUP = `EXISTS (
+	SELECT 1 FROM person_groups a JOIN person_groups b ON a.group_id = b.group_id
+	WHERE a.person_id = contacts.person_id AND b.person_id = contacts.contact_id)`;
+
 export async function listAllRecommenders(db: D1Database) {
 	const { results } = await db
-		.prepare('SELECT person_id, contact_id AS recommender_id FROM contacts')
+		.prepare(`SELECT person_id, contact_id AS recommender_id FROM contacts WHERE ${SHARES_GROUP}`)
 		.all<{ person_id: string; recommender_id: string }>();
 	return results;
 }
 
 export async function listRecommenders(db: D1Database, personId: string): Promise<string[]> {
 	const { results } = await db
-		.prepare('SELECT contact_id FROM contacts WHERE person_id = ?')
+		.prepare(`SELECT contact_id FROM contacts WHERE person_id = ? AND ${SHARES_GROUP}`)
 		.bind(personId)
 		.all<{ contact_id: string }>();
 	return results.map((r) => r.contact_id);

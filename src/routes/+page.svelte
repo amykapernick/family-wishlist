@@ -12,21 +12,29 @@
 <svelte:head><title>Wishlists · Family Wishlist</title></svelte:head>
 
 <h1>Wishlists</h1>
-{#if data.people.length === 0}
+{#if data.isEmpty}
 	<EmptyState><p>No one here yet. An admin can add the family.</p></EmptyState>
 {:else}
-	<ul class={styles.grid}>
-		{#each data.people as person (person.id)}
-			<li>
-				<PersonCard
-					href="/people/{person.id}"
-					name={person.isActing ? `${person.name} (you)` : person.name}
-					detail={person.isActing
-						? `${plural(person.count, 'item')} on your list`
-						: `${plural(person.count, 'wanted item')}`}
-					current={person.isActing}
-				/>
-			</li>
-		{/each}
-	</ul>
+	{#each data.sections as section (section.id)}
+		<section
+			class={styles.section}
+			aria-labelledby={section.name ? `group-${section.id}` : undefined}
+		>
+			{#if section.name}<h2 id="group-{section.id}">{section.name}</h2>{/if}
+			<ul class={styles.grid}>
+				{#each section.people as person (person.id)}
+					<li>
+						<PersonCard
+							href="/people/{person.id}"
+							name={person.isActing ? `${person.name} (you)` : person.name}
+							detail={person.isActing
+								? `${plural(person.count, 'item')} on your list`
+								: `${plural(person.count, 'wanted item')}`}
+							current={person.isActing}
+						/>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/each}
 {/if}

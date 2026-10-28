@@ -1,0 +1,54 @@
+/* Item cards match the wishlist's item list (people/[id]). */
+.page {
+	display: grid;
+	max-width: 50em;
+	gap: 2em;
+}
+
+.intro {
+	color: var(--text_secondary);
+}
+
+.recipient {
+	margin: 0 0 0.5em;
+}
+
+.items {
+	display: grid;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	gap: 0.75em;
+}
+
+.item {
+	display: grid;
+	gap: 0.5em;
+	border-left: 0.35em solid var(--green);
+
+	&[data-evergreen] {
+		border-left-color: var(--navy);
+	}
+
+	& p {
+		margin: 0;
+	}
+}
+
+.itemTitle {
+	margin: 0;
+	font-size: 1.3em;
+}
+
+.notes {
+	color: var(--text_secondary);
+}
+
+.claimed {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	color: var(--text_secondary);
+	font-size: 0.85em;
+	gap: 0.5em;
+}

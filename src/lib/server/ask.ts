@@ -3,7 +3,7 @@
 
 import { error } from '@sveltejs/kit';
 import type { AskTargets, IdeaRequestRow, PublicPerson } from '#lib/types.ts';
-import { askForIdeas, listRecommenders, listRequestsAbout } from './db.ts';
+import { askForIdeas, listRecommenders, listRequestsAbout, nameMap } from './db.ts';
 import { findPerson } from './guard.ts';
 import { ideaTargets } from './ideas.ts';
 import { canSeeSpoilersFor } from './permissions.ts';
@@ -26,12 +26,14 @@ export async function loadAskTargets(
 	db: D1Database,
 	identity: App.Identity,
 	about: PublicPerson
-): Promise<AskTargets & { requests: IdeaRequestRow[] }> {
-	const nameOf = (id: string) => identity.people.find((p) => p.id === id)?.name ?? 'Someone';
-	const [requests, recommenders] = await Promise.all([
+): Promise<AskTargets & { requests: IdeaRequestRow[]; names: Map<string, string> }> {
+	// Recommenders can be outside the asker's groups; requests still go to them.
+	const [requests, recommenders, names] = await Promise.all([
 		listRequestsAbout(db, about.id),
-		listRecommenders(db, about.id)
+		listRecommenders(db, about.id),
+		nameMap(db)
 	]);
+	const nameOf = (id: string) => names.get(id) ?? 'Someone';
 	const waitingOn = new Set(
 		requests
 			.filter((r) => r.from_id === identity.acting.id && r.status === 'open')
@@ -42,7 +44,8 @@ export async function loadAskTargets(
 		asksThemselves: targets.length === 1 && targets[0] === about.id,
 		waitingOnThem: waitingOn.has(about.id),
 		targets: targets.map((id) => ({ id, name: nameOf(id), waiting: waitingOn.has(id) })),
-		requests
+		requests,
+		names
 	};
 }
 
@@ -55,7 +58,8 @@ export async function sendAsk(
 ) {
 	const alsoAskThem = form.get('also_ask_them') === 'on';
 	const { created, skipped } = await askForIdeas(db, identity.acting.id, about.id, alsoAskThem);
-	const nameOf = (id: string) => (id === about.id ? about.name : findPerson(identity, id).name);
+	const names = await nameMap(db);
+	const nameOf = (id: string) => names.get(id) ?? 'Someone';
 	const parts = [];
 	if (created.length) {
 		parts.push(`Asked ${listNames(created.map(nameOf))} for ideas about ${about.name}.`);

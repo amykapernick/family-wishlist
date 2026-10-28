@@ -8,8 +8,8 @@ import { getEnv } from '#lib/server/session.ts';
 export const load: PageServerLoad = async (event) => {
 	const identity = requireIdentity(event.locals);
 	const about = askAbout(identity, event.params.id);
-	const nameOf = (id: string) => identity.people.find((p) => p.id === id)?.name ?? 'Someone';
-	const { requests, ...ask } = await loadAskTargets(getEnv().DB, identity, about);
+	const { requests, names, ...ask } = await loadAskTargets(getEnv().DB, identity, about);
+	const nameOf = (id: string) => names.get(id) ?? 'Someone';
 	return {
 		about,
 		actingId: identity.acting.id,

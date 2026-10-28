@@ -1,8 +1,8 @@
 import type { Handle } from '@sveltejs/kit/hooks';
 import { redirect } from '@sveltejs/kit';
 import { dev } from '$app/env';
-import { getSessionEpoch, listPeople, toPublicPerson } from '#lib/server/db.ts';
-import { hasAdminAccess, isLockedFor } from '#lib/server/permissions.ts';
+import { getSessionEpoch, listMemberships, listPeople, toPublicPerson } from '#lib/server/db.ts';
+import { hasAdminAccess, isLockedFor, visibleIds } from '#lib/server/permissions.ts';
 import {
 	clearIdentity,
 	getActingId,
@@ -39,7 +39,7 @@ async function resolveIdentity(
 	const selfId = await getSelfId(event.cookies, env.COOKIE_SECRET);
 	if (!selfId) return null;
 
-	const rows = await listPeople(env.DB);
+	const [rows, memberships] = await Promise.all([listPeople(env.DB), listMemberships(env.DB)]);
 	const selfRow = rows.find((p) => p.id === selfId);
 	if (!selfRow) return null;
 
@@ -48,8 +48,11 @@ async function resolveIdentity(
 	const unlocked = await getUnlocked(event.cookies, env.COOKIE_SECRET);
 	if (selfRow.pin_hash && !unlocked.includes(selfId)) return null;
 
-	// Anyone can act as anyone; people with a PIN need it first (isLockedFor).
-	const people = rows.map(toPublicPerson);
+	// Only people sharing a group with self exist as far as every page is
+	// concerned (the admin page lists everyone itself). Among them, anyone can
+	// act as anyone; people with a PIN need it first (isLockedFor).
+	const visible = visibleIds(selfId, memberships);
+	const people = rows.filter((p) => visible.has(p.id)).map(toPublicPerson);
 	const self = people.find((p) => p.id === selfId)!;
 	const actable = [self, ...people.filter((p) => p.id !== selfId)].map((p) => ({
 		...p,

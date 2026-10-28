@@ -125,3 +125,18 @@ export function leavesNoAdmin(
 		});
 	});
 }
+
+/**
+ * Who `selfId` can see: themselves, plus anyone sharing a group with them.
+ * Someone in no group sees only themselves.
+ */
+export function visibleIds(
+	selfId: string,
+	memberships: readonly { person_id: string; group_id: string }[]
+): Set<string> {
+	const mine = new Set(memberships.filter((m) => m.person_id === selfId).map((m) => m.group_id));
+	return new Set([
+		selfId,
+		...memberships.filter((m) => mine.has(m.group_id)).map((m) => m.person_id)
+	]);
+}

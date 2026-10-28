@@ -16,7 +16,7 @@
 	let { data, form }: PageProps = $props();
 
 	const isGiverView = (item: ItemView): item is GiverItemView => 'claimed_by_id' in item;
-	const nameOf = (id: string | null) => data.people.find((p) => p.id === id)?.name ?? 'Someone';
+	const nameOf = (id: string | null) => (id && data.claimerNames[id]) || 'Someone';
 	// Stays open while editing (each save re-renders the page), and opens on an error.
 	let sizesOpen = $state(false);
 	$effect(() => {
@@ -40,7 +40,7 @@
 	const claimsSince = (() => {
 		const date = new Date();
 		date.setMonth(date.getMonth() - 6);
-		return date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+		return date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 	})();
 	const timesText = (count: number) =>
 		count === 1 ? 'once' : count === 2 ? 'twice' : `${count} times`;

@@ -11,6 +11,7 @@ import {
 	createItem,
 	hasUnknownNumberTexted,
 	listItemsFor,
+	listMemberships,
 	listPeople,
 	listRecentClaims,
 	listRecommenders,
@@ -24,7 +25,7 @@ import {
 } from '../db.ts';
 import { ideaTargets, parseIdeas } from '../ideas.ts';
 import type { ItemFields } from '../db.ts';
-import { canClaim } from '../permissions.ts';
+import { canClaim, visibleIds } from '../permissions.ts';
 import { parseSizeLines } from '../sizes.ts';
 import { isGiverView, viewWishlist } from '../spoilers.ts';
 import type { ItemRow, PersonRow } from '../../types.ts';
@@ -101,8 +102,8 @@ export async function handleSms(db: D1Database, request: SmsRequest): Promise<Sm
 		trace.push({ title, code, detail, kind });
 	const saveNote = request.save ? '' : ' (preview only: not saved)';
 
-	const people = await listPeople(db);
-	const sender = people.find((p) => p.phone && p.phone === request.from.trim());
+	const everyone = await listPeople(db);
+	const sender = everyone.find((p) => p.phone && p.phone === request.from.trim());
 	if (!sender) {
 		step('Look up the sender', 'listPeople(db)', `No one has the number ${request.from}.`);
 		// Only the first text from an unknown number gets a reply.
@@ -127,6 +128,9 @@ export async function handleSms(db: D1Database, request: SmsRequest): Promise<Sm
 		};
 	}
 	step('Look up the sender', 'listPeople(db)', `${request.from} belongs to ${sender.name}.`);
+	// Like the website, a texter only finds and sees people sharing a group with them.
+	const visible = visibleIds(sender.id, await listMemberships(db));
+	const people = everyone.filter((p) => visible.has(p.id));
 
 	const now = request.now ?? new Date();
 	const result: SmsResult = {
@@ -147,7 +151,9 @@ export async function handleSms(db: D1Database, request: SmsRequest): Promise<Sm
 		step(title, request.save ? code : undefined, detail + saveNote, 'write');
 		result.changes.push(detail);
 	};
-	const nameOf = (id: string | null) => people.find((p) => p.id === id)?.name ?? 'someone';
+	// Names (who claimed something, recommenders) show across groups; finding
+	// someone to act on is limited to the texter's groups (`people`).
+	const nameOf = (id: string | null) => everyone.find((p) => p.id === id)?.name ?? 'someone';
 
 	/** One person from a typed name, or the reply explaining why not. */
 	const findOne = (typed: string): PersonRow | string => {
@@ -448,7 +454,8 @@ export async function handleSms(db: D1Database, request: SmsRequest): Promise<Sm
 					.filter((r) => r.status === 'open' && r.about_id === about.id)
 					.map((r) => r.asked_id)
 			);
-			const targets = people.filter((p) => targetIds.includes(p.id) && !open.has(p.id));
+			// Recommenders can be outside the texter's groups; they're still asked.
+			const targets = everyone.filter((p) => targetIds.includes(p.id) && !open.has(p.id));
 			if (open.size > 0) {
 				step(
 					'Skip anyone still to reply',
@@ -626,7 +633,7 @@ export async function handleSms(db: D1Database, request: SmsRequest): Promise<Sm
 				? await answerIdeaRequest(db, pending, command.text, suggestedBy)
 				: parseIdeas(command.text, suggestedBy);
 			step('Read the ideas', 'parseIdeas(body, suggestedBy)', describeIdeas(ideas));
-			const from = people.find((p) => p.id === pending.from_id);
+			const from = everyone.find((p) => p.id === pending.from_id);
 			const about = nameOf(pending.about_id);
 			write(
 				'Save the answer',

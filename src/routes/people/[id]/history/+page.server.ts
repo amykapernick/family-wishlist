@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { listClaimHistory, listEvergreenHistory } from '#lib/server/db.ts';
+import { listClaimHistory, listEvergreenHistory, nameMap } from '#lib/server/db.ts';
 import { findPerson, requireIdentity } from '#lib/server/guard.ts';
 import { canSeeSpoilersFor } from '#lib/server/permissions.ts';
 import { getEnv } from '#lib/server/session.ts';
@@ -16,13 +16,14 @@ export const load: PageServerLoad = async (event) => {
 	since.setFullYear(since.getFullYear() - 1);
 	const db = getEnv().DB;
 	const sinceDate = showAll ? null : since.toISOString().slice(0, 10);
-	const [rows, evergreen] = await Promise.all([
+	const [rows, evergreen, names] = await Promise.all([
 		listClaimHistory(db, owner.id, sinceDate),
-		listEvergreenHistory(db, owner.id, sinceDate)
+		listEvergreenHistory(db, owner.id, sinceDate),
+		nameMap(db)
 	]);
-	// A null giver was removed from the family; the gift stays, without a name.
-	const nameOf = (id: string | null) =>
-		identity.people.find((p) => p.id === id)?.name ?? 'Someone no longer in the family';
+	// Givers are named even outside your groups. A null giver was removed from
+	// the family; the gift stays, without a name.
+	const nameOf = (id: string | null) => (id && names.get(id)) ?? 'Someone no longer in the family';
 	return {
 		owner,
 		showAll,

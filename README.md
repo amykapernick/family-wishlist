@@ -7,17 +7,19 @@ Phase 1 (the web app) and phase 2 (text messages via Twilio) are both built. Tex
 ## How it works
 
 - **Getting in:** open the family link `/join/<FAMILY_TOKEN>` once per device, or enter the family PIN. The device then stays signed in for a year.
-- **Who are you:** pick yourself from the family. If you set a personal PIN, the app asks for it once per browser session.
+- **Who are you:** pick your group, then yourself (the group step is skipped when there's only one). If you set a personal PIN, the app asks for it once per browser session. A group's own link goes straight to that group's people.
+- **Groups:** admins split the family into groups (Admin → Groups) and tick each person's groups. You only see people who share at least one group with you: on Wishlists (in a section per group if you're in several), acting as, "Claim by…" and text commands. Someone in no group sees only themselves. Names still show across groups where it matters: who claimed something, recommenders and idea requests. The Admin page always shows everyone.
 - **Acting as:** the header switcher lets anyone act as anyone in the family (kids, grandparents without a phone), with no setup. Someone with a personal PIN can only be switched to after entering their PIN, once per browser session.
 - **Family members:** an admin adds people with just a name, an optional mobile (for texts) and whether they're an admin, or several at once under **Add several family members**: one per line, name then mobile (`Grandma June +61 400 000 003`). If any line has a problem, nobody is added and each bad line is listed. Removing someone deletes their list, sizes and idea requests. Claims they made on other lists (current, past and evergreen) are kept without their name, so nothing gets bought twice and Past gifts stays complete.
 - **Admins:** family members marked as admin get an **Admin** page to add, update and remove family members, grant admin, reset forgotten PINs, clear PIN lockouts, and sign out every device. Admin access only works while the admin has a personal PIN, so it is always behind a PIN check.
-- **Recommenders:** in Settings, each person (or whoever is acting for them) ticks the family members who know what they'd like. Admins can set anyone's on the Admin page.
-- **Asking for ideas:** "Ask for ideas" on someone's wishlist asks all of their recommenders (never the person asking). If they have none, it asks the person themselves to add to their list. The first answer to each request is added to that person's list (as "Suggested by …") as well as being sent to whoever asked.
+- **Recommenders:** in Settings, each person (or whoever is acting for them) ticks the family members who know what they'd like. Admins can set anyone's on the Admin page. A recommender must share a group with the person; requests still reach them even if the person asking can't see them.
+- **Asking for ideas:** "Ask for ideas" on someone's wishlist opens a confirmation naming who will be asked: all of their recommenders (never the person asking), with an option to ask the person as well. If they have none, it asks the person themselves to add to their list. The first answer to each request is added to that person's list (as "Suggested by …") as well as being sent to whoever asked.
 - **Adding items:** the **Add Item** and **Bulk Add Items** buttons at the top of a wishlist open a form in a pop-up. Bulk Add Items takes one item per line, in the same format as texting `add` (see "Ideas format" below).
 - **Sizes:** each person's page has a Sizes section of free-text pairs ("Shoes: AU 9"), added with the **Add Size** and **Bulk Add Sizes** buttons (pop-ups; bulk takes `item: size` lines, the same as by text) and changed under **Edit sizes**. Each shows when it was last updated, flagged once it's over a year old. Everyone can see them; the person, or whoever is acting as them, changes them.
 - **Always-wanted items:** tick "Always wanted" for things that are always welcome (fancy shampoo, chocolates). They stay on the list after they're claimed, show who claimed them in the last 6 months, and each claim appears in Past Gifts. A person can claim one once per 6 months.
 - **No spoilers:** when you view your own list, claimed items look like ordinary wanted items, and Past Gifts and idea requests about you are hidden. This is enforced on the server: the data for your own list never includes who claimed what.
 - **Claiming is the last step:** there's no separate "given" step. A claimed item stays on everyone else's list as "Claimed by …" until the owner removes it.
+- **Your gifts:** the **Gifts** page lists everything you've claimed in the last 6 months, by who it's for. It's always your own, even while acting as someone else.
 - **Nothing is lost:** removing a claimed item archives it instead of deleting it. Past Gifts lists everything claimed for a person (including each claim on an always-wanted item), dated by when it was claimed: the last 12 months, with an option to show everything.
 
 ### How long people stay signed in
@@ -186,11 +188,15 @@ The app always keeps at least one admin with a PIN: the last one can't be demote
 
 ### Upgrading an existing deployment
 
-Run `npm run db:migrate:remote` before `npm run deploy` whenever there are new files in `migrations/`.
+Pushing to `prod` deploys automatically (`.github/workflows/deploy.yml`): it checks and tests, applies any new migrations, then deploys. It needs the repository secrets `CLOUDFLARE_API_TOKEN` (Workers and **D1 Edit** access) and `CLOUDFLARE_ACCOUNT_ID`.
+
+To deploy by hand, run `npm run db:migrate:remote` before `npm run deploy` whenever there are new files in `migrations/`.
 
 ## The family link
 
 The link is `https://gifts.kaperscrewe.au/join/<FAMILY_TOKEN>` (the custom domain in `wrangler.jsonc`; the `*.workers.dev` address works too), using the token you set in step 4. Texting `web` sends the same link with `?me=<person>` added, which signs that phone straight in as its owner (asking for their PIN if they have one). Share it privately (for example in a family group chat). Anyone with the link gets in for a year on that device, and anyone without it needs the family PIN.
+
+Each group also has its own link, `/join/group/<token>`, shown under **Admin → Groups**. It gets a device in without the family PIN like the family link, but "Who are you?" on that device only offers the group's people. **Make a new link** there stops the old one working. Opening the family link or entering the family PIN on that device offers every group again.
 
 To sign every device out, an admin can use **Admin → Sign out every device**. If the link itself leaked, also set a new `FAMILY_TOKEN` (and change the family PIN with a new `FAMILY_PIN_HASH` if that leaked too). Changing `COOKIE_SECRET` also signs everyone out.
 
