@@ -6,7 +6,8 @@ import { requireIdentity } from '#lib/server/guard.ts';
 import { addUnlocked, clientKey, getEnv, safeNext, setActingCookie } from '#lib/server/session.ts';
 
 // The header switcher posts here. Switching to someone with a personal PIN
-// shows a PIN form first; the check happens server-side either way.
+// shows a PIN form first; the check happens server-side either way. A switch
+// always lands on Wishlists; `next` is only where the PIN form's Cancel goes.
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const identity = requireIdentity(locals);
@@ -43,6 +44,6 @@ export const actions: Actions = {
 		}
 
 		await setActingCookie(event.cookies, env.COOKIE_SECRET, target.id);
-		redirect(303, next);
+		redirect(303, '/');
 	}
 };

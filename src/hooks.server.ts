@@ -88,7 +88,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const response = await resolve(event);
-	response.headers.set('Referrer-Policy', 'no-referrer');
+	// Not no-referrer: that makes browsers send `Origin: null` on our own
+	// (non-JS) form posts, which isCrossSiteForm then rejects. same-origin still
+	// sends nothing to other sites, so join links never leak.
+	response.headers.set('Referrer-Policy', 'same-origin');
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('Cache-Control', 'private, no-store');
