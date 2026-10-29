@@ -8,6 +8,7 @@ import {
 	nameMap
 } from '#lib/server/db.ts';
 import { requireIdentity, requiredText } from '#lib/server/guard.ts';
+import type { IdeaRequestRow } from '#lib/types.ts';
 import { getEnv } from '#lib/server/session.ts';
 
 export const load: PageServerLoad = async (event) => {
@@ -16,6 +17,10 @@ export const load: PageServerLoad = async (event) => {
 	// Requests can cross groups (recommenders), so names come from the whole family.
 	const names = await nameMap(db);
 	const nameOf = (id: string) => names.get(id) ?? 'Someone';
+	// Acting as someone else (say, one of your recommenders) still never shows
+	// requests about you.
+	const notAboutSelf = (r: IdeaRequestRow) =>
+		r.about_id !== identity.self.id || identity.self.id === identity.acting.id;
 	const named = <T extends { from_id: string; about_id: string; asked_id: string }>(r: T) => ({
 		...r,
 		fromName: nameOf(r.from_id),
@@ -23,8 +28,8 @@ export const load: PageServerLoad = async (event) => {
 		askedName: nameOf(r.asked_id)
 	});
 	return {
-		inbox: (await listRequestsAsked(db, identity.acting.id)).map(named),
-		sent: (await listRequestsFrom(db, identity.acting.id)).map(named)
+		inbox: (await listRequestsAsked(db, identity.acting.id)).filter(notAboutSelf).map(named),
+		sent: (await listRequestsFrom(db, identity.acting.id)).filter(notAboutSelf).map(named)
 	};
 };
 
@@ -34,7 +39,13 @@ export const actions: Actions = {
 		const db = getEnv().DB;
 		const form = await event.request.formData();
 		const request = await getIdeaRequest(db, String(form.get('request') ?? ''));
-		if (!request || request.asked_id !== identity.acting.id) error(404, 'Request not found.');
+		if (
+			!request ||
+			request.asked_id !== identity.acting.id ||
+			(request.about_id === identity.self.id && identity.self.id !== identity.acting.id)
+		) {
+			error(404, 'Request not found.');
+		}
 		const response = requiredText(form, 'response', 'Your ideas', 2000);
 		if (response.error)
 			return fail(400, { request: request.id, message: 'Write some ideas first.' });

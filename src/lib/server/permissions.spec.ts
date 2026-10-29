@@ -94,6 +94,9 @@ describe('people', () => {
 	it('history and idea requests are hidden from the person they are about', () => {
 		expect(canSeeSpoilersFor('mia', 'mia')).toBe(false);
 		expect(canSeeSpoilersFor('alex', 'mia')).toBe(true);
+		// Signed in as Mia but acting as Alex: still no spoilers about Mia.
+		expect(canSeeSpoilersFor('alex', 'mia', 'mia')).toBe(false);
+		expect(canSeeSpoilersFor('alex', 'sam', 'mia')).toBe(true);
 	});
 
 	it('only the person (or someone acting as them) chooses their recommenders', () => {

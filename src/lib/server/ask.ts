@@ -11,7 +11,7 @@ import { canSeeSpoilersFor } from './permissions.ts';
 /** The person being asked about; never yourself. */
 export function askAbout(identity: App.Identity, aboutId: string): PublicPerson {
 	const about = findPerson(identity, aboutId);
-	if (!canSeeSpoilersFor(identity.acting.id, about.id)) {
+	if (!canSeeSpoilersFor(identity.acting.id, about.id, identity.self.id)) {
 		error(403, 'You can’t ask for gift ideas about yourself.');
 	}
 	return about;

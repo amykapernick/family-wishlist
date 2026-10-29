@@ -14,7 +14,7 @@ export const load: PageServerLoad = async (event) => {
 	]);
 	const people = identity.people.map((person) => ({
 		...person,
-		count: wishlistCount(identity.acting.id, person.id, items),
+		count: wishlistCount(identity.acting.id, person.id, items, identity.self.id),
 		isActing: person.id === identity.acting.id
 	}));
 	// Someone in several groups sees a section per group (a person in two of

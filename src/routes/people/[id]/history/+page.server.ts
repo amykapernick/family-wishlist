@@ -8,7 +8,7 @@ import { getEnv } from '#lib/server/session.ts';
 export const load: PageServerLoad = async (event) => {
 	const identity = requireIdentity(event.locals);
 	const owner = findPerson(identity, event.params.id);
-	if (!canSeeSpoilersFor(identity.acting.id, owner.id)) {
+	if (!canSeeSpoilersFor(identity.acting.id, owner.id, identity.self.id)) {
 		error(403, 'Your own gift history is hidden to keep surprises safe.');
 	}
 	const showAll = event.url.searchParams.has('all');

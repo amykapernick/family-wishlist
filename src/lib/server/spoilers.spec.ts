@@ -134,6 +134,19 @@ describe('acting as a child', () => {
 	});
 });
 
+describe('acting as someone else', () => {
+	it('still hides claims on your own list', () => {
+		// Signed in as Mia, acting as Sam, looking at Mia's list.
+		const view = viewWishlist('sam', ['sam', 'mia'], 'mia', items, [], 'mia');
+		expect(view.every((item) => !('claimed_by_id' in item))).toBe(true);
+		expect(view.every((item) => item.status === 'wanted')).toBe(true);
+	});
+
+	it('keeps your own count from dropping when something is claimed', () => {
+		expect(wishlistCount('sam', 'mia', items, 'mia')).toBe(wishlistCount('mia', 'mia', items));
+	});
+});
+
 describe('wishlistCount', () => {
 	it('does not drop for the owner when something is claimed', () => {
 		expect(wishlistCount('mia', 'mia', items)).toBe(3);

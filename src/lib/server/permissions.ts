@@ -84,9 +84,13 @@ export function canReleaseClaim(
 	);
 }
 
-/** History and idea requests about a person are hidden from that person. */
-export function canSeeSpoilersFor(actingId: string, personId: string): boolean {
-	return actingId !== personId;
+/**
+ * Claims, history and idea requests about a person are hidden from that
+ * person: whether they're acting as themselves or as someone else (`selfId`
+ * is who's signed in), so switching who you act as can't reveal your own.
+ */
+export function canSeeSpoilersFor(actingId: string, personId: string, selfId = actingId): boolean {
+	return actingId !== personId && selfId !== personId;
 }
 
 /**

@@ -8,6 +8,7 @@ import {
 	canEditItem,
 	canReleaseClaim,
 	canRemoveItem,
+	canSeeSpoilersFor,
 	canUnclaim
 } from './permissions.ts';
 
@@ -88,10 +89,11 @@ export function viewWishlist(
 	actable: readonly string[],
 	ownerId: string,
 	items: readonly ItemRow[],
-	claims: readonly ItemClaimRow[] = []
+	claims: readonly ItemClaimRow[] = [],
+	selfId = actingId
 ): ItemView[] {
 	const own = items.filter((item) => item.owner_id === ownerId);
-	if (actingId === ownerId) {
+	if (!canSeeSpoilersFor(actingId, ownerId, selfId)) {
 		return own
 			.filter((item) => item.status !== 'archived')
 			.map((item) => toOwnerView(actingId, item));
@@ -105,10 +107,13 @@ export function viewWishlist(
 export function wishlistCount(
 	actingId: string,
 	ownerId: string,
-	items: readonly ItemRow[]
+	items: readonly ItemRow[],
+	selfId = actingId
 ): number {
 	const own = items.filter((item) => item.owner_id === ownerId);
-	if (actingId === ownerId) return own.filter((item) => item.status !== 'archived').length;
+	if (!canSeeSpoilersFor(actingId, ownerId, selfId)) {
+		return own.filter((item) => item.status !== 'archived').length;
+	}
 	return own.filter((item) => item.status === 'wanted').length;
 }
 

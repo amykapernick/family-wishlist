@@ -32,6 +32,7 @@ import {
 import {
 	canClaim,
 	canEditItem,
+	canSeeSpoilersFor,
 	canReleaseClaim,
 	canRemoveItem,
 	canUnclaim,
@@ -46,7 +47,8 @@ export const load: PageServerLoad = async (event) => {
 	const identity = requireIdentity(event.locals);
 	const owner = findPerson(identity, event.params.id);
 	const db = getEnv().DB;
-	const isOwner = identity.acting.id === owner.id;
+	// Your own list, whoever you're acting as: no claims, ask or givers are loaded.
+	const isOwner = !canSeeSpoilersFor(identity.acting.id, owner.id, identity.self.id);
 	const [rows, claims, sizes, ask, names] = await Promise.all([
 		listItemsFor(db, owner.id),
 		// Never loaded for the owner, so it can't leak into their page data.
@@ -68,7 +70,14 @@ export const load: PageServerLoad = async (event) => {
 	return {
 		owner,
 		isOwner,
-		items: viewWishlist(identity.acting.id, claimantIdList(identity), owner.id, rows, claims),
+		items: viewWishlist(
+			identity.acting.id,
+			claimantIdList(identity),
+			owner.id,
+			rows,
+			claims,
+			identity.self.id
+		),
 		// Givers for "Claim by…"; never needed (or sent) on the owner's own view.
 		people: isOwner ? [] : identity.people.map(({ id, name }) => ({ id, name })),
 		claimerNames: Object.fromEntries(
@@ -266,7 +275,9 @@ export const actions: Actions = {
 		const identity = requireIdentity(event.locals);
 		const form = await event.request.formData();
 		const item = await itemFromForm(event, form);
-		if (item.owner_id === identity.acting.id) error(403, 'You can’t claim from your own list.');
+		if (!canSeeSpoilersFor(identity.acting.id, item.owner_id, identity.self.id)) {
+			error(403, 'You can’t claim from your own list.');
+		}
 		if (!canClaim(identity.acting.id, item)) {
 			return fail(409, { item: item.id, message: `Someone has already claimed “${item.title}”.` });
 		}
@@ -301,13 +312,16 @@ export const actions: Actions = {
 			const claim = (await listRecentClaims(db, item.owner_id)).find(
 				(c) => c.item_id === item.id && canReleaseClaim(claimantIdList(identity), c)
 			);
-			if (!claim || item.owner_id === identity.acting.id) {
+			if (!claim || !canSeeSpoilersFor(identity.acting.id, item.owner_id, identity.self.id)) {
 				error(403, 'Only the person who claimed this can release it.');
 			}
 			await removeEvergreenClaim(db, claim.id);
 			return { message: `Released your claim on “${item.title}”.` };
 		}
-		if (!canUnclaim(identity.acting.id, claimantIdList(identity), item)) {
+		if (
+			!canUnclaim(identity.acting.id, claimantIdList(identity), item) ||
+			!canSeeSpoilersFor(identity.acting.id, item.owner_id, identity.self.id)
+		) {
 			error(403, 'Only the person who claimed this can release it.');
 		}
 		await unclaimItem(getEnv().DB, item.id);
